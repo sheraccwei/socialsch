@@ -510,7 +510,7 @@ function renderCal(){
 
   for(let d=1;d<=dim;d++){
     const ds=`${y}-${pad(m+1)}-${pad(d)}`,isT=ds===todayStr;
-    const dow=new Date(y,m,d-1).getDay(); // 0=Sun,6=Sat
+    const dow=new Date(y,m,d).getDay(); // 0=Sun,6=Sat
     const isWE=dow===0||dow===6;
     // Sort: pending/other first, done last
     const rawEvs=evMap[ds]||[];
