@@ -655,12 +655,46 @@ function toast(msg,type=''){
   el.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove('show'),2800);
 }
 
+/* ── PASSWORD PROTECTION ── */
+const PW_HASH='ded433a7a17334ab6124f6e5737ec358d02d10780a62976478b3d8518a955810';
+const PW_KEY='socialsch_auth';
+
+async function sha256(str){
+  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+async function checkPassword(){
+  // Already authenticated this session
+  if(sessionStorage.getItem(PW_KEY)==='1') return true;
+  // Ask for password
+  let attempts=0;
+  while(attempts<3){
+    const input=prompt(attempts===0?'請輸入存取密碼：':'密碼錯誤，請再試一次：');
+    if(input===null){
+      // User cancelled - show blank page
+      document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;color:#999;">存取已取消</div>';
+      return false;
+    }
+    const hash=await sha256(input);
+    if(hash===PW_HASH){
+      sessionStorage.setItem(PW_KEY,'1');
+      return true;
+    }
+    attempts++;
+  }
+  document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;color:#999;">密碼錯誤次數過多，請重新整理頁面再試。</div>';
+  return false;
+}
+
 /* ── INIT ── */
 document.getElementById('i-date').value=todayStr;
 document.getElementById('i-time').value='09:00';
-if(!DEMO_MODE) setInterval(loadData,30000); // auto-refresh every 30s
+if(!DEMO_MODE) setInterval(loadData,30000);
 
 (async()=>{
+  const ok=await checkPassword();
+  if(!ok) return;
   if(DEMO_MODE){
     document.getElementById('ov-txt').textContent='⚠️ 尚未設定 API Key，顯示示範資料';
     setTimeout(()=>{document.getElementById('overlay').classList.add('hidden');loadDemo();},1200);
