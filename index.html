@@ -167,7 +167,56 @@ tbody td select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://ww
 @keyframes spin{to{transform:rotate(360deg);}}
 .ov-txt{font-size:.8rem;color:var(--ink2);}
 ::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--bdr2);border-radius:8px;}
-@media(max-width:860px){main{grid-template-columns:1fr;height:auto;}.left{max-height:58vh;border-right:none;border-bottom:1px solid var(--bdr);}}
+@media(max-width:860px){
+  main{grid-template-columns:1fr;height:auto;overflow:visible;}
+  .left{max-height:none;border-right:none;border-bottom:none;}
+  /* Hide desktop add form and table on mobile */
+  .add-form{display:none;}
+  .filter-bar{display:none;}
+  .tbl-wrap{display:none;}
+  /* Hide desktop right panel controls and show mobile layout */
+  .right{padding:12px 14px 100px;}
+  /* Mobile bottom tab bar */
+  .mob-tabs{display:flex;}
+  /* Mobile FAB */
+  .mob-fab{display:flex;}
+  /* Mobile add modal */
+  .mob-add-modal{display:block;}
+  /* Show/hide panels */
+  .left.mob-hidden{display:none;}
+  .right.mob-hidden{display:none;}
+  /* Bigger touch targets on calendar */
+  .cal-day{min-height:64px;padding:4px 3px 3px;}
+  .chip{font-size:.6rem;padding:3px 4px;margin-bottom:3px;}
+  .day-num{font-size:.72rem;margin-bottom:4px;}
+  .nav-btn{width:36px;height:36px;font-size:1rem;}
+  .cal-title{font-size:1.4rem;}
+  .cap{padding:7px 14px;font-size:.74rem;}
+}
+@media(min-width:861px){
+  .mob-tabs{display:none!important;}
+  .mob-fab{display:none!important;}
+  .mob-add-modal{display:none!important;}
+}
+
+/* ── MOBILE COMPONENTS ── */
+.mob-tabs{position:fixed;bottom:0;left:0;right:0;background:var(--ink);display:none;z-index:50;padding:0;border-top:1px solid rgba(255,255,255,.1);}
+.mob-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 4px 14px;color:rgba(255,255,255,.45);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;border:none;background:none;font-family:inherit;gap:4px;transition:color .15s;}
+.mob-tab .mt-icon{font-size:1.2rem;line-height:1;}
+.mob-tab.active{color:#fff;}
+.mob-tab.active .mt-bar{width:20px;height:2px;background:var(--acc);border-radius:2px;margin-top:2px;}
+.mob-tab .mt-bar{width:20px;height:2px;background:transparent;border-radius:2px;margin-top:2px;}
+.mob-fab{position:fixed;bottom:72px;right:18px;z-index:51;display:none;}
+.mob-fab-btn{width:52px;height:52px;border-radius:50%;background:var(--acc);color:#fff;border:none;font-size:1.6rem;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(201,79,10,.45);transition:transform .15s,background .15s;}
+.mob-fab-btn:active{transform:scale(.93);}
+.mob-fab-btn:hover{background:var(--acc-d);}
+/* Mobile add modal */
+.mob-add-modal{display:none;position:fixed;inset:0;z-index:200;background:rgba(26,24,20,.6);}
+.mob-add-sheet{position:absolute;bottom:0;left:0;right:0;background:var(--surf);border-radius:16px 16px 0 0;padding:20px 18px 40px;max-height:90vh;overflow-y:auto;animation:slideup .22s ease;}
+@keyframes slideup{from{transform:translateY(100%);}to{transform:translateY(0);}}
+.mob-sheet-handle{width:36px;height:4px;background:var(--bdr2);border-radius:2px;margin:0 auto 18px;}
+.mob-sheet-title{font-family:'Syne',sans-serif;font-size:1rem;font-weight:800;margin-bottom:16px;}
+.mob-close{position:absolute;top:18px;right:18px;background:var(--surf2);border:none;border-radius:50%;width:30px;height:30px;font-size:.9rem;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--ink2);}
 </style>
 </head>
 <body>
@@ -189,17 +238,26 @@ tbody td select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://ww
   <div class="left">
     <div class="add-form">
       <div class="sec-label">新增排程</div>
-      <div class="g4">
+      <div class="g3">
         <div class="f"><label>📆 日期</label><input type="date" id="i-date"></div>
         <div class="f"><label>⏰ 時間（24h）</label><input type="time" id="i-time"></div>
         <div class="f"><label>🏷 帳號</label>
           <select id="i-acct"><option value="GarminTW">GarminTW</option><option value="GRC">GRC</option></select>
         </div>
-        <div class="f"><label>🌐 平台</label>
-          <select id="i-plat">
-            <option value="ig">📸 IG</option><option value="fb">📘 FB</option><option value="tw">🐦 X</option>
-            <option value="yt">▶️ YT</option><option value="li">💼 LinkedIn</option><option value="th">🧵 Threads</option><option value="tk">🎵 TikTok</option>
-          </select>
+      </div>
+      <div class="g1">
+        <div class="f"><label>🌐 平台（可複選）</label>
+          <div style="display:flex;gap:8px;margin-top:2px;">
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-weight:600;font-size:.8rem;padding:7px 16px;background:var(--surf2);border:1.5px solid var(--bdr);border-radius:6px;transition:all .14s;flex:1;justify-content:center;" id="plat-ig-lbl">
+              <input type="checkbox" id="plat-ig" value="ig" onchange="updatePlatLabel()" style="width:auto;padding:0;background:none;border:none;accent-color:var(--acc);cursor:pointer;"> Instagram
+            </label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-weight:600;font-size:.8rem;padding:7px 16px;background:var(--surf2);border:1.5px solid var(--bdr);border-radius:6px;transition:all .14s;flex:1;justify-content:center;" id="plat-fb-lbl">
+              <input type="checkbox" id="plat-fb" value="fb" onchange="updatePlatLabel()" style="width:auto;padding:0;background:none;border:none;accent-color:var(--acc);cursor:pointer;"> Facebook
+            </label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-weight:600;font-size:.8rem;padding:7px 16px;background:var(--surf2);border:1.5px solid var(--bdr);border-radius:6px;transition:all .14s;flex:1;justify-content:center;" id="plat-th-lbl">
+              <input type="checkbox" id="plat-th" value="th" onchange="updatePlatLabel()" style="width:auto;padding:0;background:none;border:none;accent-color:var(--acc);cursor:pointer;"> Threads
+            </label>
+          </div>
         </div>
       </div>
       <div class="g2">
@@ -220,7 +278,7 @@ tbody td select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://ww
       <select id="f-month" onchange="renderTable()"><option value="">所有月份</option></select>
       <select id="f-acct" onchange="renderTable()"><option value="">所有帳號</option><option value="GarminTW">GarminTW</option><option value="GRC">GRC</option></select>
       <select id="f-status" onchange="renderTable()"><option value="">所有狀態</option><option value="pending">⏳ 待排程</option><option value="done">✅ 已完成</option><option value="other">⚠️ 其他</option></select>
-      <select id="f-plat" onchange="renderTable()"><option value="">所有平台</option><option value="ig">📸 IG</option><option value="fb">📘 FB</option><option value="tw">🐦 X</option><option value="yt">▶️ YT</option><option value="li">💼 LinkedIn</option><option value="th">🧵 Threads</option><option value="tk">🎵 TikTok</option></select>
+      <select id="f-plat" onchange="renderTable()"><option value="">所有平台</option><option value="ig">IG</option><option value="fb">FB</option><option value="th">Threads</option></select>
       <button class="btn-ref" onclick="loadData()">↺ 重新整理</button>
     </div>
     <div class="tbl-wrap">
@@ -248,6 +306,68 @@ tbody td select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://ww
   </div>
 </main>
 
+<!-- ── MOBILE BOTTOM TABS ── -->
+<div class="mob-tabs" id="mob-tabs">
+  <button class="mob-tab active" id="mob-tab-cal" onclick="mobSwitch('cal')">
+    <div class="mt-icon">📅</div>
+    <div>月曆</div>
+    <div class="mt-bar"></div>
+  </button>
+  <button class="mob-tab" id="mob-tab-list" onclick="mobSwitch('list')">
+    <div class="mt-icon">📋</div>
+    <div>列表</div>
+    <div class="mt-bar"></div>
+  </button>
+</div>
+
+<!-- ── MOBILE FAB ── -->
+<div class="mob-fab">
+  <button class="mob-fab-btn" onclick="mobOpenAdd()" title="新增排程">＋</button>
+</div>
+
+<!-- ── MOBILE ADD MODAL ── -->
+<div class="mob-add-modal" id="mob-add-modal" onclick="mobCloseAdd(event)">
+  <div class="mob-add-sheet" onclick="event.stopPropagation()">
+    <div class="mob-sheet-handle"></div>
+    <button class="mob-close" onclick="mobCloseAdd()">✕</button>
+    <div class="mob-sheet-title">新增排程</div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:9px;">
+      <div class="f"><label>📆 日期</label><input type="date" id="mi-date"></div>
+      <div class="f"><label>⏰ 時間</label><input type="time" id="mi-time" style="font-family:'DM Mono',monospace;"></div>
+    </div>
+    <div style="margin-bottom:9px;" class="f"><label>🏷 帳號</label>
+      <select id="mi-acct"><option value="GarminTW">GarminTW</option><option value="GRC">GRC</option></select>
+    </div>
+    <div style="margin-bottom:9px;" class="f"><label>🌐 平台（可複選）</label>
+      <div style="display:flex;gap:8px;margin-top:4px;">
+        <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;cursor:pointer;font-weight:600;font-size:.82rem;padding:10px;background:var(--surf2);border:1.5px solid var(--bdr);border-radius:8px;transition:all .14s;" id="mplat-ig-lbl">
+          <input type="checkbox" id="mplat-ig" onchange="updateMobPlatLabel()" style="width:auto;accent-color:var(--acc);cursor:pointer;"> IG
+        </label>
+        <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;cursor:pointer;font-weight:600;font-size:.82rem;padding:10px;background:var(--surf2);border:1.5px solid var(--bdr);border-radius:8px;transition:all .14s;" id="mplat-fb-lbl">
+          <input type="checkbox" id="mplat-fb" onchange="updateMobPlatLabel()" style="width:auto;accent-color:var(--acc);cursor:pointer;"> FB
+        </label>
+        <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;cursor:pointer;font-weight:600;font-size:.82rem;padding:10px;background:var(--surf2);border:1.5px solid var(--bdr);border-radius:8px;transition:all .14s;" id="mplat-th-lbl">
+          <input type="checkbox" id="mplat-th" onchange="updateMobPlatLabel()" style="width:auto;accent-color:var(--acc);cursor:pointer;"> TH
+        </label>
+      </div>
+    </div>
+    <div style="margin-bottom:9px;" class="f"><label>✏️ 貼文主題</label>
+      <input type="text" id="mi-topic" placeholder="主題或標題…">
+    </div>
+    <div style="margin-bottom:9px;" class="f"><label>📌 狀態</label>
+      <select id="mi-status" onchange="toggleNote(this,'mi-note-row')">
+        <option value="pending">⏳ 待排程</option><option value="done">✅ 已完成</option><option value="other">⚠️ 其他</option>
+      </select>
+    </div>
+    <div class="note-row" id="mi-note-row" style="margin-bottom:9px;">
+      <div class="f"><label>📝 備註</label><textarea id="mi-note" rows="2" placeholder="說明此排程發生的狀況…"></textarea></div>
+    </div>
+    <button class="btn-add" onclick="mobAddRow()">＋ 新增排程</button>
+  </div>
+</div>
+
+
 <script>
 /* ⚙️ 設定區 */
 const CFG={
@@ -257,7 +377,7 @@ const CFG={
   sheet:'Schedules',
 };
 
-const PL={ig:{l:'Instagram',i:'📸',c:'p-ig'},fb:{l:'Facebook',i:'📘',c:'p-fb'},tw:{l:'X/Twitter',i:'🐦',c:'p-tw'},yt:{l:'YouTube',i:'▶️',c:'p-yt'},li:{l:'LinkedIn',i:'💼',c:'p-li'},th:{l:'Threads',i:'🧵',c:'p-th'},tk:{l:'TikTok',i:'🎵',c:'p-tk'}};
+const PL={ig:{l:'Instagram',i:'IG',t:'[IG]',c:'p-ig'},fb:{l:'Facebook',i:'FB',t:'[FB]',c:'p-fb'},th:{l:'Threads',i:'TH',t:'[TH]',c:'p-th'}};
 const ST={pending:{l:'待排程',i:'⏳',c:'s-pending'},done:{l:'已完成',i:'✅',c:'s-done'},other:{l:'其他',i:'⚠️',c:'s-other'}};
 const MONTHS=['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'];
 const DOWS=['日','一','二','三','四','五','六'];
@@ -329,7 +449,8 @@ async function addRow(){
   const d=document.getElementById('i-date').value;
   const t=document.getElementById('i-time').value;
   const acct=document.getElementById('i-acct').value;
-  const pl=document.getElementById('i-plat').value;
+  const platChecked=['ig','fb','th'].filter(k=>document.getElementById('plat-'+k)?.checked);
+  const pl=platChecked.join('+') || 'ig';  // e.g. "ig+fb" or "ig" 
   const topic=document.getElementById('i-topic').value.trim();
   const status=document.getElementById('i-status').value;
   const note=document.getElementById('i-note').value.trim();
@@ -350,6 +471,8 @@ async function addRow(){
     document.getElementById('i-note').value='';
     document.getElementById('i-status').value='pending';
     document.getElementById('add-note-row').classList.remove('show');
+    ['ig','fb','th'].forEach(k=>{const el=document.getElementById('plat-'+k);if(el)el.checked=false;});
+    updatePlatLabel();
     const[y,mo]=d.split('-').map(Number);cy=y;cm=mo-1;
     setSS('ok','已儲存 '+hhmm());render();toast('排程已新增 ✓','ok');
   }catch(e){
@@ -397,7 +520,7 @@ async function del(id){
 /* DETAIL MODAL */
 function showDetail(id){
   const s=data.find(s=>s.id===id);if(!s)return;
-  const p=PL[s.plat]||PL.ig,st=ST[s.status]||ST.pending;
+  const platKeys=s.plat.split('+');const p=PL[platKeys[0]]||PL.ig,st=ST[s.status]||ST.pending;
   const isG=s.acct==='GarminTW';
   document.getElementById('modal-area').innerHTML=`
   <div class="modal-bg" onclick="closeModal(event)">
@@ -408,7 +531,7 @@ function showDetail(id){
       </div>
       <div class="modal-row"><div class="modal-label">帳號</div><div class="modal-val"><span class="badge ${isG?'ab-garmin':'ab-grc'}">${esc(s.acct)}</span></div></div>
       <div class="modal-row"><div class="modal-label">日期</div><div class="modal-val">${esc(s.date)}${s.time?' '+esc(s.time):''}</div></div>
-      <div class="modal-row"><div class="modal-label">平台</div><div class="modal-val"><span class="badge ${p.c}">${p.i} ${p.l}</span></div></div>
+      <div class="modal-row"><div class="modal-label">平台</div><div class="modal-val">${renderPlatBadges(s.plat)}</div></div>
       <div class="modal-row"><div class="modal-label">狀態</div><div class="modal-val"><span class="badge ${st.c}">${st.i} ${st.l}</span></div></div>
       ${s.note?`<div class="modal-note">📝 ${esc(s.note)}</div>`:''}
       <div class="modal-row" style="margin-top:12px"><div class="modal-label">建立</div><div class="modal-val" style="font-size:.72rem;color:var(--ink3)">${shortDT(s.createdAt)}</div></div>
@@ -446,7 +569,7 @@ function rebuildMonthFilter(){
 }
 function getFiltered(){
   const fm=document.getElementById('f-month').value,fa=document.getElementById('f-acct').value,fs=document.getElementById('f-status').value,fp=document.getElementById('f-plat').value;
-  return data.filter(s=>(!fm||s.date.startsWith(fm))&&(!fa||s.acct===fa)&&(!fs||s.status===fs)&&(!fp||s.plat===fp));
+  return data.filter(s=>(!fm||s.date.startsWith(fm))&&(!fa||s.acct===fa)&&(!fs||s.status===fs)&&(!fp||s.plat.split('+').includes(fp)));
 }
 
 function render(){
@@ -467,7 +590,7 @@ function renderTable(){
       <td><span class="badge ${isG?'ab-garmin':'ab-grc'}" style="font-size:.58rem">${esc(s.acct)}</span></td>
       <td style="min-width:94px"><input type="date" value="${s.date}" onchange="upd('${s.id}','date',this.value)"></td>
       <td style="min-width:62px"><input type="time" value="${s.time||''}" onchange="upd('${s.id}','time',this.value)" style="font-family:'DM Mono',monospace;font-size:.71rem;"></td>
-      <td style="min-width:80px"><select onchange="upd('${s.id}','plat',this.value)">${Object.entries(PL).map(([k,v])=>`<option value="${k}"${k===s.plat?' selected':''}>${v.i} ${v.l}</option>`).join('')}</select></td>
+      <td style="min-width:70px">${renderPlatBadges(s.plat)}</td>
       <td style="min-width:94px"><input type="text" value="${esc(s.topic)}" onchange="upd('${s.id}','topic',this.value)" placeholder="主題…"></td>
       <td style="min-width:78px"><select class="badge ${st.c}" onchange="handleStatus('${s.id}',this.value)">${Object.entries(ST).map(([k,v])=>`<option value="${k}"${k===s.status?' selected':''}>${v.i} ${v.l}</option>`).join('')}</select></td>
       <td style="min-width:74px" class="${s.note?'has-note':''}" ${s.note?`data-note="${esc(s.note)}"`:''}>${noteCell}</td>
@@ -493,10 +616,10 @@ function renderCal(){
 
   // Platform stats
   const platCnt={};
-  filtered.forEach(s=>{platCnt[s.plat]=(platCnt[s.plat]||0)+1;});
+  filtered.forEach(s=>{s.plat.split('+').forEach(k=>{platCnt[k]=(platCnt[k]||0)+1;});});
   const statsHtml=Object.entries(platCnt).sort((a,b)=>b[1]-a[1]).map(([k,n])=>{
     const p=PL[k]||PL.ig;
-    return`<div class="stat-item">${p.i} <span class="stat-num">${n}</span><span style="color:var(--ink3)">${p.l}</span></div>`;
+    return`<div class="stat-item"><span style="font-size:.65rem;font-weight:700;color:var(--ink2)">${p.t}</span> <span class="stat-num">${n}</span><span style="color:var(--ink3)">${p.l}</span></div>`;
   }).join('');
   document.getElementById('cal-stats').innerHTML=statsHtml||`<div style="font-size:.65rem;color:var(--ink3)">本月尚無排程</div>`;
 
@@ -516,13 +639,14 @@ function renderCal(){
     const rawEvs=evMap[ds]||[];
     const evs=[...rawEvs.filter(s=>s.status!=='done'),...rawEvs.filter(s=>s.status==='done')];
     const chips=evs.slice(0,3).map(s=>{
-      const p=PL[s.plat]||PL.ig,isDone=s.status==='done';
+      const platKeys=s.plat.split('+');
+      const p=PL[platKeys[0]]||PL.ig,isDone=s.status==='done';
       const timeStr=s.time?` ${s.time}`:'';
-      // Format: [FB] 12:00 主題
-      const label=`[${p.l.replace('/Twitter','')}]${timeStr} ${s.topic}`;
+      const platTag=platKeys.map(k=>(PL[k]||PL.ig).t).join('');
+      const label=`${platTag}${timeStr} ${s.topic}`;
       return`<div class="chip ${p.c} ${s.acct==='GarminTW'?'chip-garmin':'chip-grc'}${isDone?' chip-done':''}" 
         onclick="showDetail('${s.id}')" title="${esc(label)}">
-        <div class="cbar"></div><span>${p.i}${timeStr} ${esc(s.topic)}</span>
+        <div class="cbar"></div><span style="font-size:.52rem;font-weight:700;opacity:.8;flex-shrink:0">${platTag}</span><span>${esc(timeStr)} ${esc(s.topic)}</span>
       </div>`;
     }).join('');
     const more=evs.length>3?`<div class="more-chip" onclick="showMoreDay('${ds}')">+${evs.length-3} 更多</div>`:'';
@@ -540,7 +664,7 @@ function showMoreDay(ds){
     const p=PL[s.plat]||PL.ig,st=ST[s.status]||ST.pending;
     return`<div style="padding:8px 0;border-bottom:1px solid var(--bdr);cursor:pointer;" onclick="closeModal();showDetail('${s.id}')">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
-        <span class="badge ${p.c}">${p.i} ${p.l}</span>
+        ${renderPlatBadges(s.plat)}
         <span class="badge ${st.c}">${st.i} ${st.l}</span>
         ${s.time?`<span style="font-family:'DM Mono',monospace;font-size:.65rem;color:var(--ink3)">${esc(s.time)}</span>`:''}
       </div>
@@ -554,6 +678,24 @@ function showMoreDay(ds){
       ${items}
     </div>
   </div>`;
+}
+
+/* PLATFORM HELPERS */
+function updatePlatLabel(){
+  ['ig','fb','th'].forEach(k=>{
+    const cb=document.getElementById('plat-'+k);
+    const lbl=document.getElementById('plat-'+k+'-lbl');
+    if(cb&&lbl){
+      if(cb.checked){lbl.style.background='var(--acc-bg)';lbl.style.borderColor='var(--acc)';lbl.style.color='var(--acc)';}
+      else{lbl.style.background='var(--surf2)';lbl.style.borderColor='var(--bdr)';lbl.style.color='var(--ink)';}
+    }
+  });
+}
+function renderPlatBadges(platStr){
+  return platStr.split('+').map(k=>{
+    const p=PL[k]||PL.ig;
+    return`<span class="badge ${p.c}" style="font-size:.6rem;margin-right:2px">${p.t}</span>`;
+  }).join('');
 }
 
 /* RENDER WEEKLY ALERT */
@@ -574,12 +716,12 @@ function renderAlert(){
   }
   ap.style.display='block';
   const items=pending.map(s=>{
-    const p=PL[s.plat]||PL.ig,isG=s.acct==='GarminTW';
+    const platKeys=s.plat.split('+');const p=PL[platKeys[0]]||PL.ig,isG=s.acct==='GarminTW';
     const d=new Date(s.date+'T00:00:00');
     const dayLabel=['日','一','二','三','四','五','六'][d.getDay()];
     return`<div class="alert-item" onclick="showDetail('${s.id}')">
       <span class="alert-date">${pad(d.getMonth()+1)}/${pad(d.getDate())}（${dayLabel}）</span>
-      <span class="badge ${p.c}" style="font-size:.58rem">${p.i}</span>
+      ${renderPlatBadges(s.plat).replace(/font-size:[^;]+/g,'font-size:.58rem')}
       <span class="badge ${isG?'ab-garmin':'ab-grc'}" style="font-size:.55rem">${esc(s.acct)}</span>
       <span style="font-size:.75rem;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.topic)}</span>
       ${s.time?`<span style="font-family:'DM Mono',monospace;font-size:.62rem;color:var(--ink3)">${esc(s.time)}</span>`:''}
@@ -616,6 +758,7 @@ async function checkPassword(){
 
 /* INIT */
 document.getElementById('i-date').value=todayStr;
+initMobileLayout();
 document.getElementById('i-time').value='09:00';
 if(!DEMO_MODE)setInterval(loadData,30000);
 
