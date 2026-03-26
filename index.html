@@ -84,7 +84,23 @@ tbody td select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://ww
 .s-other{background:var(--surf2);color:var(--ink2);}
 .ab-garmin{background:var(--garmin-bg);color:var(--garmin);}
 .ab-grc{background:var(--grc-bg);color:var(--grc);}
-.p-ig{background:#fdeef4;color:#c2185b;}.p-fb{background:#e8f0fe;color:#1565c0;}.p-tw{background:#eeeeee;color:#1a1a1a;}.p-yt{background:#fff0f0;color:#c62828;}.p-li{background:#e3f0ff;color:#0a66c2;}.p-th{background:#f3f3f3;color:#333;}.p-tk{background:#fff0f3;color:#c2185b;}
+.p-ig{background:#fdeef4;color:#c2185b;}.p-fb{background:#e8f0fe;color:#1565c0;}.p-tw{background:#eeeeee;color:#1a1a1a;}.p-yt{background:#fff0f0;color:#c62828;}.p-li{background:#e3f0ff;color:#0a66c2;}.p-th{background:#f3f3f3;color:#444;}.p-tk{background:#fff0f3;color:#c2185b;}
+/* Multi-platform selector */
+.plat-cb-lbl{display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-weight:600;font-size:.78rem;padding:5px 12px;background:var(--surf2);border:1.5px solid var(--bdr);border-radius:6px;transition:all .14s;user-select:none;}
+.plat-cb-lbl:hover{border-color:var(--bdr2);}
+.plat-cb-lbl.checked{background:var(--acc-bg);border-color:var(--acc);color:var(--acc);}
+.plat-cb-lbl input[type=checkbox]{width:13px;height:13px;accent-color:var(--acc);cursor:pointer;margin:0;}
+.plat-picker{position:relative;}
+.plat-display{width:100%;padding:6px 9px;background:var(--surf2);border:1.5px solid var(--bdr);border-radius:6px;font-family:inherit;font-size:.77rem;color:var(--ink);cursor:pointer;display:flex;align-items:center;gap:3px;flex-wrap:wrap;min-height:33px;user-select:none;}
+.plat-display:hover,.plat-display.open{border-color:var(--acc);background:#fff;}
+.plat-dropdown{display:none;position:absolute;top:calc(100% + 3px);left:0;right:0;background:#fff;border:1.5px solid var(--acc);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:50;padding:8px;}
+.plat-dropdown.show{display:block;}
+.plat-section-label{font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);padding:2px 4px 6px;display:block;}
+.plat-option{display:flex;align-items:center;gap:7px;padding:5px 6px;border-radius:5px;cursor:pointer;transition:background .12s;}
+.plat-option:hover{background:var(--surf2);}
+.plat-option input[type=checkbox]{width:14px;height:14px;accent-color:var(--acc);cursor:pointer;}
+.plat-option-label{font-size:.78rem;color:var(--ink);flex:1;}
+.plat-sep{border:none;border-top:1px solid var(--bdr);margin:6px 0;}
 .has-note{position:relative;cursor:help;}
 .has-note:hover::after{content:attr(data-note);position:absolute;bottom:110%;left:0;background:var(--ink);color:#fff;font-size:.65rem;padding:6px 9px;border-radius:6px;white-space:pre-wrap;max-width:200px;z-index:999;pointer-events:none;line-height:1.5;box-shadow:0 4px 14px rgba(0,0,0,.22);}
 /* CALENDAR */
@@ -246,17 +262,35 @@ tbody td select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://ww
         </div>
       </div>
       <div class="g1">
-        <div class="f"><label>🌐 平台（可複選）</label>
-          <div style="display:flex;gap:8px;margin-top:2px;">
-            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-weight:600;font-size:.8rem;padding:7px 16px;background:var(--surf2);border:1.5px solid var(--bdr);border-radius:6px;transition:all .14s;flex:1;justify-content:center;" id="plat-ig-lbl">
-              <input type="checkbox" id="plat-ig" value="ig" onchange="updatePlatLabel()" style="width:auto;padding:0;background:none;border:none;accent-color:var(--acc);cursor:pointer;"> Instagram
+        <div class="f">
+          <label>🌐 平台（可複選）</label>
+          <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;align-items:center;">
+            <label class="plat-cb-lbl" id="plat-ig-lbl">
+              <input type="checkbox" id="plat-ig" value="ig" onchange="updatePlatLabel()"> IG
             </label>
-            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-weight:600;font-size:.8rem;padding:7px 16px;background:var(--surf2);border:1.5px solid var(--bdr);border-radius:6px;transition:all .14s;flex:1;justify-content:center;" id="plat-fb-lbl">
-              <input type="checkbox" id="plat-fb" value="fb" onchange="updatePlatLabel()" style="width:auto;padding:0;background:none;border:none;accent-color:var(--acc);cursor:pointer;"> Facebook
+            <label class="plat-cb-lbl" id="plat-fb-lbl">
+              <input type="checkbox" id="plat-fb" value="fb" onchange="updatePlatLabel()"> FB
             </label>
-            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-weight:600;font-size:.8rem;padding:7px 16px;background:var(--surf2);border:1.5px solid var(--bdr);border-radius:6px;transition:all .14s;flex:1;justify-content:center;" id="plat-th-lbl">
-              <input type="checkbox" id="plat-th" value="th" onchange="updatePlatLabel()" style="width:auto;padding:0;background:none;border:none;accent-color:var(--acc);cursor:pointer;"> Threads
+            <label class="plat-cb-lbl" id="plat-th-lbl">
+              <input type="checkbox" id="plat-th" value="th" onchange="updatePlatLabel()"> Threads
             </label>
+            <div style="position:relative;display:inline-block;">
+              <label class="plat-cb-lbl" id="plat-other-toggle" onclick="toggleOtherPlats(event)" style="cursor:pointer;color:var(--ink3);">+ 其他 ▾</label>
+              <div id="plat-other-dropdown" style="display:none;position:absolute;top:calc(100%+4px);left:0;background:#fff;border:1.5px solid var(--acc);border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.12);z-index:50;padding:6px 4px;min-width:120px;">
+                <label class="plat-cb-lbl" id="plat-tw-lbl" style="display:flex;margin:2px 4px;">
+                  <input type="checkbox" id="plat-tw" value="tw" onchange="updatePlatLabel()"> X/Twitter
+                </label>
+                <label class="plat-cb-lbl" id="plat-yt-lbl" style="display:flex;margin:2px 4px;">
+                  <input type="checkbox" id="plat-yt" value="yt" onchange="updatePlatLabel()"> YouTube
+                </label>
+                <label class="plat-cb-lbl" id="plat-li-lbl" style="display:flex;margin:2px 4px;">
+                  <input type="checkbox" id="plat-li" value="li" onchange="updatePlatLabel()"> LinkedIn
+                </label>
+                <label class="plat-cb-lbl" id="plat-tk-lbl" style="display:flex;margin:2px 4px;">
+                  <input type="checkbox" id="plat-tk" value="tk" onchange="updatePlatLabel()"> TikTok
+                </label>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -377,7 +411,19 @@ const CFG={
   sheet:'Schedules',
 };
 
-const PL={ig:{l:'Instagram',i:'IG',t:'[IG]',c:'p-ig'},fb:{l:'Facebook',i:'FB',t:'[FB]',c:'p-fb'},th:{l:'Threads',i:'TH',t:'[TH]',c:'p-th'}};
+const PL={
+  ig:{l:'Instagram',s:'IG', c:'p-ig'},
+  fb:{l:'Facebook', s:'FB', c:'p-fb'},
+  th:{l:'Threads',  s:'TH', c:'p-th'},
+  tw:{l:'X/Twitter',s:'X',  c:'p-tw'},
+  yt:{l:'YouTube',  s:'YT', c:'p-yt'},
+  li:{l:'LinkedIn', s:'Li', c:'p-li'},
+  tk:{l:'TikTok',   s:'TK', c:'p-tk'},
+};
+const MAIN_PLATS=['ig','fb','th'];
+const OTHER_PLATS=['tw','yt','li','tk'];
+function platLabel(ps){return(ps||'ig').split(',').filter(Boolean).map(k=>PL[k]?`[${PL[k].s}]`:'').join('');}
+function platBadges(ps){return(ps||'ig').split(',').filter(Boolean).map(k=>PL[k]?`<span class="badge ${PL[k].c}" style="font-size:.6rem;margin-right:2px">[${PL[k].s}]</span>`:'').join('');}
 const ST={pending:{l:'待排程',i:'⏳',c:'s-pending'},done:{l:'已完成',i:'✅',c:'s-done'},other:{l:'其他',i:'⚠️',c:'s-other'}};
 const MONTHS=['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'];
 const DOWS=['日','一','二','三','四','五','六'];
@@ -419,7 +465,8 @@ async function loadData(){
       let t=String(r[2]||'').trim();
       // Convert "9:00:00" → "09:00"
       if(t.match(/^\d{1,2}:\d{2}(:\d{2})?$/)){t=t.substring(0,5).padStart(5,'0');}
-      data.push({id:String(r[0]),date:r[1]||'',time:t,acct:r[3]||'GarminTW',plat:r[4]||'ig',topic:r[5]||'',status:r[6]||'pending',note:r[7]||'',createdAt:r[8]||'',updatedAt:r[9]||''});
+      const rawPlat=String(r[4]||'ig').replace(/\+/g,',');
+      data.push({id:String(r[0]),date:r[1]||'',time:t,acct:r[3]||'GarminTW',plat:rawPlat,topic:r[5]||'',status:r[6]||'pending',note:r[7]||'',createdAt:r[8]||'',updatedAt:r[9]||''});
     }
     setSS('ok','已同步 '+hhmm());render();
   }catch(e){
@@ -470,6 +517,7 @@ async function addRow(){
     document.getElementById('i-topic').value='';
     document.getElementById('i-note').value='';
     document.getElementById('i-status').value='pending';
+    getAllPlatKeys().forEach(k=>{const cb=document.getElementById('plat-'+k);if(cb)cb.checked=false;});updatePlatLabel();
     document.getElementById('add-note-row').classList.remove('show');
     ['ig','fb','th'].forEach(k=>{const el=document.getElementById('plat-'+k);if(el)el.checked=false;});
     updatePlatLabel();
@@ -520,24 +568,71 @@ async function del(id){
 /* DETAIL MODAL */
 function showDetail(id){
   const s=data.find(s=>s.id===id);if(!s)return;
-  const platKeys=s.plat.split('+');const p=PL[platKeys[0]]||PL.ig,st=ST[s.status]||ST.pending;
+  const p=PL[s.plat]||PL.ig,st=ST[s.status]||ST.pending;
   const isG=s.acct==='GarminTW';
+  const platOpts=Object.entries(PL).map(([k,v])=>`<option value="${k}"${k===s.plat?' selected':''}>${v.s||v.l}</option>`).join('');
+  const stOpts=Object.entries(ST).map(([k,v])=>`<option value="${k}"${k===s.status?' selected':''}>${v.i} ${v.l}</option>`).join('');
+  const inp='font-size:.8rem;padding:5px 8px;border:1.5px solid var(--bdr);border-radius:5px;background:var(--surf2);font-family:inherit;width:100%;outline:none;-webkit-appearance:none;appearance:none;';
+  const _modalPlat=s.plat;
   document.getElementById('modal-area').innerHTML=`
   <div class="modal-bg" onclick="closeModal(event)">
-    <div class="modal" onclick="event.stopPropagation()">
-      <div class="modal-title">
-        <span>${p.i} ${esc(s.topic)}</span>
-        <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal" onclick="event.stopPropagation()" style="max-width:460px">
+      <div class="modal-title"><span>✏️ 排程細項</span><button class="modal-close" onclick="closeModal()">✕</button></div>
+      <div class="modal-row"><div class="modal-label">帳號</div><div class="modal-val">
+        <select onchange="updModal('${s.id}','acct',this.value)" style="${inp}">
+          <option value="GarminTW"${s.acct==='GarminTW'?' selected':''}>GarminTW</option>
+          <option value="GRC"${s.acct==='GRC'?' selected':''}>GRC</option>
+        </select></div></div>
+      <div class="modal-row"><div class="modal-label">日期</div><div class="modal-val" style="display:flex;gap:6px">
+        <input type="date" value="${s.date}" onchange="updModal('${s.id}','date',this.value)" style="${inp}flex:1;">
+        <input type="time" value="${s.time||''}" onchange="updModal('${s.id}','time',this.value)" style="${inp}width:88px;font-family:'DM Mono',monospace;">
+      </div></div>
+      <div class="modal-row"><div class="modal-label">平台</div><div class="modal-val">
+        <div id="modal-plat-wrap" style="display:flex;flex-wrap:wrap;gap:5px;"></div>
+      </div></div>
+      <div class="modal-row"><div class="modal-label">主題</div><div class="modal-val">
+        <input type="text" value="${esc(s.topic)}" onchange="updModal('${s.id}','topic',this.value)" style="${inp}"></div></div>
+      <div class="modal-row"><div class="modal-label">狀態</div><div class="modal-val">
+        <select onchange="updModal('${s.id}','status',this.value)" style="${inp}">${stOpts}</select></div></div>
+      <div class="modal-row"><div class="modal-label">備註</div><div class="modal-val">
+        <textarea onchange="updModal('${s.id}','note',this.value)" style="${inp}min-height:52px;resize:vertical;">${esc(s.note||'')}</textarea></div></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--bdr);">
+        <div style="font-size:.62rem;color:var(--ink3)">建立 ${shortDT(s.createdAt)} ／ 更新 <span style="color:var(--acc)">${shortDT(s.updatedAt)}</span></div>
+        <button onclick="del('${s.id}');closeModal();" style="background:var(--red-bg);border:1px solid #e0a0a0;color:var(--red);border-radius:5px;padding:4px 10px;font-size:.72rem;cursor:pointer;font-family:inherit;">🗑 刪除</button>
       </div>
-      <div class="modal-row"><div class="modal-label">帳號</div><div class="modal-val"><span class="badge ${isG?'ab-garmin':'ab-grc'}">${esc(s.acct)}</span></div></div>
-      <div class="modal-row"><div class="modal-label">日期</div><div class="modal-val">${esc(s.date)}${s.time?' '+esc(s.time):''}</div></div>
-      <div class="modal-row"><div class="modal-label">平台</div><div class="modal-val">${renderPlatBadges(s.plat)}</div></div>
-      <div class="modal-row"><div class="modal-label">狀態</div><div class="modal-val"><span class="badge ${st.c}">${st.i} ${st.l}</span></div></div>
-      ${s.note?`<div class="modal-note">📝 ${esc(s.note)}</div>`:''}
-      <div class="modal-row" style="margin-top:12px"><div class="modal-label">建立</div><div class="modal-val" style="font-size:.72rem;color:var(--ink3)">${shortDT(s.createdAt)}</div></div>
-      <div class="modal-row"><div class="modal-label">更新</div><div class="modal-val" style="font-size:.72rem;color:var(--acc)">${shortDT(s.updatedAt)}</div></div>
     </div>
   </div>`;
+  setTimeout(()=>initModalPlat(id,_modalPlat),10);
+}
+async function updModal(id,field,val){
+  await upd(id,field,val);
+  setTimeout(()=>showDetail(id),200);
+}
+function initModalPlat(id,currentPlat){
+  const wrap=document.getElementById('modal-plat-wrap');
+  if(!wrap)return;
+  const keys=Object.keys(PL);
+  const selected=(currentPlat||'ig').split(',');
+  wrap.innerHTML=keys.map(k=>{
+    const p=PL[k];
+    const isChk=selected.includes(k);
+    return`<label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;font-size:.75rem;font-weight:600;padding:4px 9px;background:${isChk?'var(--acc-bg)':'var(--surf2)'};border:1.5px solid ${isChk?'var(--acc)':'var(--bdr)'};border-radius:5px;transition:all .12s;" id="mplat-lbl-${k}">
+      <input type="checkbox" ${isChk?'checked':''} onchange="updateModalPlat('${id}')" id="mplat-${k}" style="width:12px;height:12px;accent-color:var(--acc);cursor:pointer;margin:0;"> ${p.s}
+    </label>`;
+  }).join('');
+}
+function updateModalPlat(id){
+  const keys=Object.keys(PL);
+  const selected=keys.filter(k=>{const cb=document.getElementById('mplat-'+k);return cb&&cb.checked;});
+  keys.forEach(k=>{
+    const cb=document.getElementById('mplat-'+k);
+    const lbl=document.getElementById('mplat-lbl-'+k);
+    if(cb&&lbl){
+      lbl.style.background=cb.checked?'var(--acc-bg)':'var(--surf2)';
+      lbl.style.borderColor=cb.checked?'var(--acc)':'var(--bdr)';
+    }
+  });
+  if(selected.length>0) updModal(id,'plat',selected.join(','));
 }
 function closeModal(e){if(!e||e.target.classList.contains('modal-bg'))document.getElementById('modal-area').innerHTML='';}
 
@@ -645,7 +740,8 @@ function renderCal(){
       const platTag=platKeys.map(k=>(PL[k]||PL.ig).t).join('');
       const label=`${platTag}${timeStr} ${s.topic}`;
       const chipLabel=(s.time?s.time+' ':'')+s.topic;
-      return`<div class="chip ${p.c} ${s.acct==='GarminTW'?'chip-garmin':'chip-grc'}${isDone?' chip-done':''}" onclick="showDetail('${s.id}')" title="${esc(label)}"><div class="cbar"></div><span style="font-size:.55rem;font-weight:700;flex-shrink:0;opacity:.85;padding-right:3px">${platTag}</span><span style="overflow:hidden;text-overflow:ellipsis;flex:1">${esc(chipLabel)}</span></div>`;
+      const platTagStr=platLabel(s.plat);
+      return`<div class="chip ${p.c} ${s.acct==='GarminTW'?'chip-garmin':'chip-grc'}${isDone?' chip-done':''}" onclick="showDetail('${s.id}')" title="${esc(label)}"><div class="cbar"></div><span style="font-size:.55rem;font-weight:700;flex-shrink:0;opacity:.85;padding-right:3px">${platTagStr}</span><span style="overflow:hidden;text-overflow:ellipsis;flex:1">${esc(chipLabel)}</span></div>`;
     }).join('');
     const more=evs.length>3?`<div class="more-chip" onclick="showMoreDay('${ds}')">+${evs.length-3} 更多</div>`:'';
     html+=`<div class="cal-day${isT?' today':''}${evs.length?' busy':''}${isWE?' weekend':''}"><div class="day-num">${d}</div>${chips}${more}</div>`;
@@ -679,20 +775,43 @@ function showMoreDay(ds){
 }
 
 /* PLATFORM HELPERS */
+function getAllPlatKeys(){return ['ig','fb','th','tw','yt','li','tk'];}
+function getSelectedPlats(){
+  return getAllPlatKeys().filter(k=>{const cb=document.getElementById('plat-'+k);return cb&&cb.checked;});
+}
+function setSelectedPlats(platStr){
+  const keys=(platStr||'ig').split(',').filter(Boolean);
+  getAllPlatKeys().forEach(k=>{
+    const cb=document.getElementById('plat-'+k);
+    if(cb) cb.checked=keys.includes(k);
+  });
+  updatePlatLabel();
+}
 function updatePlatLabel(){
-  ['ig','fb','th'].forEach(k=>{
+  getAllPlatKeys().forEach(k=>{
     const cb=document.getElementById('plat-'+k);
     const lbl=document.getElementById('plat-'+k+'-lbl');
-    if(cb&&lbl){
-      if(cb.checked){lbl.style.background='var(--acc-bg)';lbl.style.borderColor='var(--acc)';lbl.style.color='var(--acc)';}
-      else{lbl.style.background='var(--surf2)';lbl.style.borderColor='var(--bdr)';lbl.style.color='var(--ink)';}
-    }
+    if(cb&&lbl) lbl.classList.toggle('checked',cb.checked);
   });
+  // Update "其他" toggle label if any other plat checked
+  const otherChecked=['tw','yt','li','tk'].some(k=>{const cb=document.getElementById('plat-'+k);return cb&&cb.checked;});
+  const tog=document.getElementById('plat-other-toggle');
+  if(tog) tog.classList.toggle('checked',otherChecked);
 }
+function toggleOtherPlats(e){
+  e.stopPropagation();
+  const dd=document.getElementById('plat-other-dropdown');
+  if(dd) dd.style.display=dd.style.display==='none'?'block':'none';
+}
+// Close dropdown when clicking outside
+document.addEventListener('click',()=>{
+  const dd=document.getElementById('plat-other-dropdown');
+  if(dd) dd.style.display='none';
+});
 function renderPlatBadges(platStr){
-  return platStr.split('+').map(k=>{
+  return(platStr||'ig').split(',').filter(Boolean).map(k=>{
     const p=PL[k]||PL.ig;
-    return`<span class="badge ${p.c}" style="font-size:.6rem;margin-right:2px">${p.t}</span>`;
+    return`<span class="badge ${p.c}" style="font-size:.6rem;margin-right:2px">[${p.s}]</span>`;
   }).join('');
 }
 
@@ -757,6 +876,7 @@ async function checkPassword(){
 /* INIT */
 document.getElementById('i-date').value=todayStr;
 document.getElementById('i-time').value='09:00';
+const _igCb=document.getElementById('plat-ig');if(_igCb){_igCb.checked=true;updatePlatLabel();}
 initMobileLayout();
 renderCal(); // Draw calendar structure immediately on page load
 if(!DEMO_MODE)setInterval(loadData,30000);
