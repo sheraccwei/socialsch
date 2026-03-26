@@ -619,7 +619,7 @@ function renderCal(){
   filtered.forEach(s=>{s.plat.split('+').forEach(k=>{platCnt[k]=(platCnt[k]||0)+1;});});
   const statsHtml=Object.entries(platCnt).sort((a,b)=>b[1]-a[1]).map(([k,n])=>{
     const p=PL[k]||PL.ig;
-    return`<div class="stat-item"><span style="font-size:.65rem;font-weight:700;color:var(--ink2)">${p.t}</span> <span class="stat-num">${n}</span><span style="color:var(--ink3)">${p.l}</span></div>`;
+    return`<div class="stat-item"><span class="badge ${p.c}" style="font-size:.62rem;font-weight:700">${p.t}</span><span class="stat-num" style="margin-left:3px">${n}</span><span style="color:var(--ink3);margin-left:1px">則</span></div>`;
   }).join('');
   document.getElementById('cal-stats').innerHTML=statsHtml||`<div style="font-size:.65rem;color:var(--ink3)">本月尚無排程</div>`;
 
@@ -646,7 +646,7 @@ function renderCal(){
       const label=`${platTag}${timeStr} ${s.topic}`;
       return`<div class="chip ${p.c} ${s.acct==='GarminTW'?'chip-garmin':'chip-grc'}${isDone?' chip-done':''}" 
         onclick="showDetail('${s.id}')" title="${esc(label)}">
-        <div class="cbar"></div><span style="font-size:.52rem;font-weight:700;opacity:.8;flex-shrink:0">${platTag}</span><span>${esc(timeStr)} ${esc(s.topic)}</span>
+        <div class="cbar"></div><span style="font-size:.52rem;font-weight:700;opacity:.8;flex-shrink:0;margin-right:2px">${platTag}</span><span>${s.time?esc(s.time)+' ':''}<b style="font-weight:500">${esc(s.topic)}</b></span>
       </div>`;
     }).join('');
     const more=evs.length>3?`<div class="more-chip" onclick="showMoreDay('${ds}')">+${evs.length-3} 更多</div>`:'';
@@ -740,10 +740,10 @@ function toast(msg,type=''){const el=document.getElementById('toast');el.textCon
 
 /* PASSWORD */
 const PW_HASH='ded433a7a17334ab6124f6e5737ec358d02d10780a62976478b3d8518a955810';
-const PW_KEY='socialsch_auth';
+const PW_KEY='socialsch_auth_v1';
 async function sha256(str){const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(str));return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');}
 async function checkPassword(){
-  if(sessionStorage.getItem(PW_KEY)==='1')return true;
+  if(localStorage.getItem(PW_KEY)==='1')return true;
   let attempts=0;
   while(attempts<3){
     const input=prompt(attempts===0?'請輸入存取密碼：':'密碼錯誤，請再試一次（'+(3-attempts)+'次機會）：');
