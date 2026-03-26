@@ -409,7 +409,9 @@ async function sheetRead(){
   return(await r.json()).values||[];
 }
 async function gasCall(payload){
-  const r=await fetch(CFG.gasUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  // Apps Script requires form-encoded POST (no JSON Content-Type) to avoid CORS preflight
+  const body=new URLSearchParams({data:JSON.stringify(payload)});
+  const r=await fetch(CFG.gasUrl,{method:'POST',body});
   if(!r.ok)throw new Error('GAS HTTP '+r.status);
   return r.json();
 }
