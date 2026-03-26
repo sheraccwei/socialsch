@@ -34,8 +34,8 @@ header{background:var(--ink);color:#fff;padding:11px 22px;display:flex;align-ite
 .total-pill{background:var(--acc);color:#fff;font-size:.64rem;font-weight:700;padding:2px 9px;border-radius:20px;font-family:'DM Mono',monospace;}
 
 /* LAYOUT */
-main{flex:1;display:grid;grid-template-columns:400px 1fr;height:calc(100vh - 43px);overflow:hidden;}
-.left{background:var(--surf);border-right:1px solid var(--bdr);display:flex;flex-direction:column;overflow:hidden;}
+main{flex:1;display:grid;grid-template-columns:400px 1fr;height:calc(100vh - 43px);overflow:hidden;min-height:0;}
+.left{background:var(--surf);border-right:1px solid var(--bdr);display:flex;flex-direction:column;overflow:hidden;min-height:0;}
 .right{padding:16px 20px;overflow-y:auto;background:var(--bg);}
 
 /* FORM */
@@ -85,7 +85,7 @@ main{flex:1;display:grid;grid-template-columns:400px 1fr;height:calc(100vh - 43p
 .btn-ref:hover{background:var(--bdr);}
 
 /* TABLE */
-.tbl-wrap{flex:1;overflow-y:auto;}
+.tbl-wrap{flex:1;overflow-y:auto;min-height:0;}
 .tbl-head{padding:7px 16px 5px;border-bottom:1px solid var(--bdr);position:sticky;top:0;background:var(--surf);z-index:3;display:flex;align-items:center;justify-content:space-between;}
 table{width:100%;border-collapse:collapse;}
 thead th{padding:0 6px 5px;text-align:left;font-size:.59rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);white-space:nowrap;}
