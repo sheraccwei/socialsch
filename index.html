@@ -222,7 +222,7 @@ tbody td select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://ww
 <body>
 <div class="sbar" id="sbar"></div>
 <div class="toast" id="toast"></div>
-<div id="overlay"><div class="spinner"></div><div class="ov-txt" id="ov-txt">連線中…</div></div>
+<div id="overlay" class="hidden"><div class="spinner"></div><div class="ov-txt" id="ov-txt">連線中…</div></div>
 <div id="modal-area"></div>
 
 <header>
@@ -765,12 +765,16 @@ if(!DEMO_MODE)setInterval(loadData,30000);
 (async()=>{
   const ok=await checkPassword();
   if(!ok)return;
+  // Show loading overlay only after password is confirmed
+  const ov=document.getElementById('overlay');
+  ov.classList.remove('hidden');
   if(DEMO_MODE){
     document.getElementById('ov-txt').textContent='⚠️ 示範模式';
-    setTimeout(()=>{document.getElementById('overlay').classList.add('hidden');loadDemo();},800);
+    setTimeout(()=>{ov.classList.add('hidden');loadDemo();},800);
   }else{
+    document.getElementById('ov-txt').textContent='連線 Google Sheets…';
     await loadData();
-    document.getElementById('overlay').classList.add('hidden');
+    ov.classList.add('hidden');
   }
 })();
 </script>
