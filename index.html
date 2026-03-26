@@ -116,6 +116,10 @@ tbody td select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://ww
 .cal-day.other{background:transparent;border-color:transparent;opacity:.28;}
 .cal-day.today{border-color:var(--acc);background:var(--acc-bg);}
 .cal-day.busy{border-color:var(--bdr2);}
+.cal-day.weekend{background:#faf8f4;border-color:#ede8df;}
+.cal-day.weekend .day-num{color:#c8b89a;}
+.cal-day.today.weekend{border-color:var(--acc);background:var(--acc-bg);}
+.cal-dow.weekend-dow{color:#c8b89a;}
 .day-num{font-family:'DM Mono',monospace;font-size:.65rem;color:var(--ink3);margin-bottom:3px;}
 .cal-day.today .day-num{color:var(--acc);font-weight:700;}
 /* Chips */
@@ -129,6 +133,13 @@ tbody td select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://ww
 .more-chip{font-size:.52rem;color:var(--ink3);background:var(--surf2);border-radius:3px;padding:1px 4px;margin-top:1px;cursor:pointer;}
 .more-chip:hover{background:var(--bdr2);}
 .cal-legend{display:flex;gap:14px;margin-top:12px;}
+.alert-panel{background:#fffbf0;border:1.5px solid #f5d76e;border-radius:8px;padding:12px 14px;margin-bottom:12px;}
+.alert-title{font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#8a6000;margin-bottom:8px;display:flex;align-items:center;gap:5px;}
+.alert-item{display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid #f5e9b8;cursor:pointer;transition:background .12s;}
+.alert-item:last-child{border-bottom:none;}
+.alert-item:hover{background:#fdf5d0;border-radius:4px;padding-left:4px;}
+.alert-date{font-family:"DM Mono",monospace;font-size:.63rem;color:#8a6000;min-width:44px;}
+.alert-empty{font-size:.7rem;color:#b89a3a;}
 .leg-item{display:flex;align-items:center;gap:5px;font-size:.68rem;color:var(--ink2);}
 .leg-dot{width:10px;height:10px;border-radius:3px;}
 .leg-garmin{background:var(--garmin);}.leg-grc{background:var(--grc);}
@@ -232,6 +243,7 @@ tbody td select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://ww
     <!-- Platform stats for this month -->
     <div class="cal-stats" id="cal-stats"></div>
     <div class="cal-grid" id="cal"></div>
+    <div id="alert-panel" class="alert-panel" style="display:none"></div>
     <div class="cal-legend"><div class="leg-item"><div class="leg-dot leg-garmin"></div>GarminTW</div><div class="leg-item"><div class="leg-dot leg-grc"></div>GRC</div></div>
   </div>
 </main>
@@ -439,7 +451,7 @@ function getFiltered(){
 
 function render(){
   document.getElementById('total-pill').textContent=data.length+' 筆';
-  rebuildMonthFilter();renderTable();renderCal();
+  rebuildMonthFilter();renderTable();renderCal();renderAlert();
 }
 
 /* RENDER TABLE */
@@ -493,11 +505,16 @@ function renderCal(){
   filtered.forEach(s=>{if(!evMap[s.date])evMap[s.date]=[];evMap[s.date].push(s);});
 
   const firstDow=new Date(y,m,1).getDay(),dim=new Date(y,m+1,0).getDate(),prevDim=new Date(y,m,0).getDate();
-  let html=DOWS.map(d=>`<div class="cal-dow">${d}</div>`).join('');
+  let html=DOWS.map((d,i)=>`<div class="cal-dow${i===0||i===6?' weekend-dow':''}">${d}</div>`).join('');
   for(let i=firstDow-1;i>=0;i--)html+=`<div class="cal-day other"><div class="day-num">${prevDim-i}</div></div>`;
 
   for(let d=1;d<=dim;d++){
-    const ds=`${y}-${pad(m+1)}-${pad(d)}`,evs=evMap[ds]||[],isT=ds===todayStr;
+    const ds=`${y}-${pad(m+1)}-${pad(d)}`,isT=ds===todayStr;
+    const dow=new Date(y,m,d-1).getDay(); // 0=Sun,6=Sat
+    const isWE=dow===0||dow===6;
+    // Sort: pending/other first, done last
+    const rawEvs=evMap[ds]||[];
+    const evs=[...rawEvs.filter(s=>s.status!=='done'),...rawEvs.filter(s=>s.status==='done')];
     const chips=evs.slice(0,3).map(s=>{
       const p=PL[s.plat]||PL.ig,isDone=s.status==='done';
       const timeStr=s.time?` ${s.time}`:'';
@@ -509,7 +526,7 @@ function renderCal(){
       </div>`;
     }).join('');
     const more=evs.length>3?`<div class="more-chip" onclick="showMoreDay('${ds}')">+${evs.length-3} 更多</div>`:'';
-    html+=`<div class="cal-day${isT?' today':''}${evs.length?' busy':''}"><div class="day-num">${d}</div>${chips}${more}</div>`;
+    html+=`<div class="cal-day${isT?' today':''}${evs.length?' busy':''}${isWE?' weekend':''}"><div class="day-num">${d}</div>${chips}${more}</div>`;
   }
   const total=Math.ceil((firstDow+dim)/7)*7;
   for(let d=1;d<=total-firstDow-dim;d++)html+=`<div class="cal-day other"><div class="day-num">${d}</div></div>`;
@@ -537,6 +554,38 @@ function showMoreDay(ds){
       ${items}
     </div>
   </div>`;
+}
+
+/* RENDER WEEKLY ALERT */
+function renderAlert(){
+  const ap=document.getElementById('alert-panel');
+  if(!ap)return;
+  // Get current week's Monday and Sunday
+  const now=new Date();
+  const dow=now.getDay(); // 0=Sun
+  const monday=new Date(now); monday.setDate(now.getDate()-(dow===0?6:dow-1));
+  const sunday=new Date(monday); sunday.setDate(monday.getDate()+6);
+  const fmt=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  const monStr=fmt(monday),sunStr=fmt(sunday);
+  const pending=data.filter(s=>s.status!=='done'&&s.date>=monStr&&s.date<=sunStr);
+  pending.sort((a,b)=>a.date.localeCompare(b.date)||(a.time||'').localeCompare(b.time||''));
+  if(!pending.length){
+    ap.style.display='none';return;
+  }
+  ap.style.display='block';
+  const items=pending.map(s=>{
+    const p=PL[s.plat]||PL.ig,isG=s.acct==='GarminTW';
+    const d=new Date(s.date+'T00:00:00');
+    const dayLabel=['日','一','二','三','四','五','六'][d.getDay()];
+    return`<div class="alert-item" onclick="showDetail('${s.id}')">
+      <span class="alert-date">${pad(d.getMonth()+1)}/${pad(d.getDate())}（${dayLabel}）</span>
+      <span class="badge ${p.c}" style="font-size:.58rem">${p.i}</span>
+      <span class="badge ${isG?'ab-garmin':'ab-grc'}" style="font-size:.55rem">${esc(s.acct)}</span>
+      <span style="font-size:.75rem;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.topic)}</span>
+      ${s.time?`<span style="font-family:'DM Mono',monospace;font-size:.62rem;color:var(--ink3)">${esc(s.time)}</span>`:''}
+    </div>`;
+  }).join('');
+  ap.innerHTML=`<div class="alert-title">⚠️ 本週未完成排程（${pending.length} 筆）</div>${items}`;
 }
 
 function mv(delta){cm+=delta;if(cm<0){cm=11;cy--;}if(cm>11){cm=0;cy++;}renderCal();}
