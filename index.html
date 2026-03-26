@@ -180,6 +180,14 @@ td select:focus{border-color:var(--acc);background:#fff;}
 .more-chip{font-size:.52rem;color:var(--ink3);background:var(--surf2);border-radius:3px;padding:1px 4px;margin-top:1px;cursor:pointer;}
 .more-chip:hover{background:var(--bdr2);}
 
+/* FIXED ALERT STRIP */
+.alert-strip{background:#fffbf0;border:1.5px solid #f0d060;border-radius:8px;padding:9px 14px;margin-bottom:10px;display:none;}
+.alert-strip.show{display:block;}
+.alert-strip-title{font-size:.63rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#8a6000;margin-bottom:6px;}
+.alert-strip-items{display:flex;flex-wrap:wrap;gap:5px;}
+.alert-chip{display:inline-flex;align-items:center;gap:4px;background:#fff3cc;border:1px solid #f0d060;border-radius:5px;padding:3px 8px;font-size:.7rem;cursor:pointer;transition:background .12s;}
+.alert-chip:hover{background:#ffe999;}
+.alert-chip .ac-date{font-family:"DM Mono",monospace;font-size:.62rem;color:#8a6000;}
 /* ALERT PANEL */
 .alert-panel{background:#fffbf0;border:1.5px solid #f5d76e;border-radius:7px;padding:10px 12px;margin-bottom:10px;}
 .alert-title{font-size:.64rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#8a6000;margin-bottom:7px;}
@@ -314,6 +322,10 @@ textarea.minp{min-height:48px;resize:vertical;}
 
   <!-- RIGHT: CALENDAR -->
   <div class="right">
+    <div class="alert-strip" id="alert-strip">
+      <div class="alert-strip-title" id="alert-strip-title"></div>
+      <div class="alert-strip-items" id="alert-strip-items"></div>
+    </div>
     <div class="cal-acct-bar">
       <div class="cap all on" id="cp-all" onclick="setCalAcct('all')">全部 <span class="cap-cnt" id="cn-all"></span></div>
       <div class="cap garmin" id="cp-garmin" onclick="setCalAcct('GarminTW')"><div class="cap-dot"></div>GarminTW <span class="cap-cnt" id="cn-garmin"></span></div>
@@ -491,7 +503,6 @@ async function addRow(){
     document.getElementById('i-status').value='pending';
     document.getElementById('add-note-row').classList.remove('show');
     resetAddPlats();
-    const[y,mo]=d.split('-').map(Number); cy=y; cm=mo-1;
     setSS('ok','已儲存 '+hhmm());
     render(); toast('排程已新增 ✓','ok');
   }catch(e){
@@ -775,8 +786,6 @@ function renderCal(){
 }
 
 function renderAlert(){
-  const ap=document.getElementById('alert-panel');
-  if(!ap) return;
   const now=new Date();
   const dow=now.getDay();
   const mon=new Date(now); mon.setDate(now.getDate()-(dow===0?6:dow-1));
@@ -784,22 +793,49 @@ function renderAlert(){
   const monStr=fmtDate(mon), sunStr=fmtDate(sun);
   const pending=data.filter(s=>s.status!=='done'&&s.date>=monStr&&s.date<=sunStr);
   pending.sort((a,b)=>a.date.localeCompare(b.date)||(a.time||'').localeCompare(b.time||''));
-  if(!pending.length){ ap.innerHTML=''; return; }
+
+  // Fixed strip (always visible top of calendar)
+  const strip=document.getElementById('alert-strip');
+  const sTitle=document.getElementById('alert-strip-title');
+  const sItems=document.getElementById('alert-strip-items');
+  if(strip&&sTitle&&sItems){
+    if(!pending.length){
+      strip.classList.remove('show');
+    } else {
+      strip.classList.add('show');
+      sTitle.textContent='⚠️ 本週未完成排程（'+pending.length+' 筆）';
+      sItems.innerHTML=pending.map(s=>{
+        const d=new Date(s.date+'T00:00');
+        const dl=DOWS[d.getDay()];
+        return`<div class="alert-chip" onclick="showDetail('${s.id}')">
+          <span class="ac-date">${pad(d.getMonth()+1)}/${pad(d.getDate())}（${dl}）</span>
+          ${platBadgesHtml(s.plat)}
+          <span style="font-size:.7rem;overflow:hidden;text-overflow:ellipsis;max-width:90px;white-space:nowrap">${esc(s.topic)}</span>
+          ${s.time?`<span style="font-family:'DM Mono',monospace;font-size:.6rem;color:#8a6000">${esc(s.time)}</span>`:''}
+        </div>`;
+      }).join('');
+    }
+  }
+
+  // Bottom panel (under calendar)
+  const ap=document.getElementById('alert-panel');
+  if(!ap) return;
+  if(!pending.length){ ap.innerHTML=''; ap.className=''; ap.style.marginTop=''; return; }
   const items=pending.map(s=>{
     const d=new Date(s.date+'T00:00');
-    const dayLabel=DOWS[d.getDay()];
+    const dl=DOWS[d.getDay()];
     const isG=s.acct==='GarminTW';
     return`<div class="alert-item" onclick="showDetail('${s.id}')">
-      <span class="alert-date">${pad(d.getMonth()+1)}/${pad(d.getDate())}（${dayLabel}）</span>
+      <span class="alert-date">${pad(d.getMonth()+1)}/${pad(d.getDate())}（${dl}）</span>
       ${platBadgesHtml(s.plat)}
       <span class="badge ${isG?'ab-garmin':'ab-grc'}" style="font-size:.55rem">${esc(s.acct)}</span>
       <span style="flex:1;font-size:.74rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.topic)}</span>
       ${s.time?`<span style="font-family:'DM Mono',monospace;font-size:.62rem;color:#8a6000">${esc(s.time)}</span>`:''}
     </div>`;
   }).join('');
-  ap.innerHTML=`<div class="alert-panel" style="margin-top:10px">
-    <div class="alert-title">⚠️ 本週未完成排程（${pending.length} 筆）</div>${items}
-  </div>`;
+  ap.className='alert-panel';
+  ap.style.marginTop='10px';
+  ap.innerHTML=`<div class="alert-title">⚠️ 本週未完成排程（${pending.length} 筆）</div>${items}`;
 }
 
 function mv(delta){
