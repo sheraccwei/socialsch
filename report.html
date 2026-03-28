@@ -1015,9 +1015,12 @@ document.getElementById('btn-save').addEventListener('click', function() {
   .then(function(res) { return res.json(); })
   .then(function(data) {
     if (data.status === 'ok') {
-      ok.textContent = '✓ 已存入 Sheets（' + data.added + ' 筆）';
+      var msg = data.updated > 0
+        ? '✓ 已更新 ' + data.updated + ' 筆、新增 ' + data.added + ' 筆'
+        : '✓ 已新增 ' + data.added + ' 筆';
+      ok.textContent = msg;
       ok.classList.add('show');
-      setTimeout(function() { ok.classList.remove('show'); }, 5000);
+      setTimeout(function() { ok.classList.remove('show'); }, 6000);
     } else {
       alert('儲存失敗：' + JSON.stringify(data));
     }
