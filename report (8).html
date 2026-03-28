@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Garmin Social Report Builder</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;font-family:'Noto Sans TC',sans-serif;font-size:13px;color:#1a1a1a;background:#F2F2F2}
+.hdr{height:48px;background:#000;border-bottom:3px solid #E8001D;display:flex;align-items:center;padding:0 20px;gap:14px;flex-shrink:0}
+.hdr-logo{font-size:15px;font-weight:900;color:#fff;letter-spacing:.1em}
+.hdr-sep{width:1px;height:18px;background:#333}
+.hdr-sub{font-size:11px;color:#666}
+.hdr-btns{margin-left:auto;display:flex;gap:8px;align-items:center}
+.hbtn{padding:6px 14px;border-radius:3px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;border:1px solid #444;background:transparent;color:#bbb;transition:all .15s}
+.hbtn:hover:not(:disabled){border-color:#888;color:#fff}
+.hbtn.pri{background:#E8001D;border-color:#E8001D;color:#fff}
+.hbtn.pri:hover:not(:disabled){background:#c40018}
+.hbtn:disabled{opacity:.3;cursor:not-allowed}
+.spin-row{display:none;align-items:center;gap:6px;font-size:11px;color:#888}
+.spin-row.show{display:flex}
+.spin{width:10px;height:10px;border:2px solid #333;border-top-color:#E8001D;border-radius:50%;animation:sp .6s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.app{display:flex;height:calc(100vh - 48px)}
+.sb{width:272px;min-width:240px;background:#fff;border-right:1px solid #E0E0E0;display:flex;flex-direction:column;overflow:hidden}
+.sb-top{flex:1;overflow-y:auto}
+.sec{padding:12px 14px;border-bottom:1px solid #F0F0F0}
+.slbl{font-size:9px;font-weight:700;letter-spacing:.1em;color:#AAA;text-transform:uppercase;margin-bottom:7px}
+.drop{border:1.5px dashed #DDD;border-radius:4px;padding:14px 10px;text-align:center;cursor:pointer;background:#FAFAFA;transition:all .18s}
+.drop:hover,.drop.drag{border-color:#E8001D;background:#FFF5F5}
+.drop.ok{border-color:#16A34A;border-style:solid;background:#F0FDF4}
+.drop-ico{font-size:18px;margin-bottom:4px}
+.drop-name{font-size:11px;font-weight:600;color:#333;margin-bottom:1px}
+.drop-sub{font-size:10px;color:#AAA}
+.up-stat{margin-top:6px;font-size:10px;min-height:13px}
+.ok-c{color:#16A34A;font-weight:600}
+.err-c{color:#E8001D}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.fld{display:flex;flex-direction:column;gap:3px;margin-bottom:6px}
+.fld label{font-size:9px;color:#AAA;text-transform:uppercase;letter-spacing:.04em}
+.fld input,.fld select,.fld textarea{padding:5px 7px;border:1px solid #E0E0E0;border-radius:3px;font-size:11px;font-family:inherit;color:#222;background:#fff;outline:none;width:100%}
+.fld input:focus,.fld select:focus,.fld textarea:focus{border-color:#000}
+.fld textarea{resize:vertical;min-height:78px;line-height:1.6}
+.plt-row{display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap}
+.plt{padding:3px 9px;border-radius:20px;font-size:10px;font-weight:600;border:1.5px solid #DDD;background:#fff;cursor:pointer;color:#BBB;font-family:inherit;transition:all .15s}
+.plt.on-IG{border-color:#E1306C;color:#E1306C;background:#FFF0F5}
+.plt.on-FB{border-color:#1877F2;color:#1877F2;background:#F0F5FF}
+.plt.on-TH{border-color:#444;color:#333;background:#F5F5F5}
+.camp-wrap{display:flex;flex-direction:column;gap:2px;max-height:120px;overflow-y:auto}
+.ci{display:flex;align-items:flex-start;gap:6px;font-size:10.5px;cursor:pointer;padding:2px 0;line-height:1.4}
+.ci input{accent-color:#000;margin-top:2px;flex-shrink:0}
+.smgr{display:flex;flex-direction:column;gap:4px}
+.scard{border:1px solid #E0E0E0;border-radius:4px;cursor:pointer;overflow:hidden;transition:all .15s}
+.scard:hover{border-color:#999}
+.scard.active{border-color:#000;box-shadow:0 0 0 1px #000}
+.sc-h{display:flex;align-items:center;padding:6px 8px;gap:6px;background:#FAFAFA}
+.sc-n{width:16px;height:16px;background:#E0E0E0;border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#666;flex-shrink:0}
+.scard.active .sc-n{background:#000;color:#fff}
+.sc-lbl{font-size:10px;font-weight:500;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sc-del{font-size:14px;color:#CCC;padding:0 2px;line-height:1;cursor:pointer}
+.sc-del:hover{background:#EEE;color:#E8001D}
+.sc-tags{padding:3px 8px 6px;display:flex;flex-wrap:wrap;gap:3px}
+.sc-tag{font-size:8px;padding:1px 5px;border-radius:8px;background:#F0F0F0;color:#777;border:1px solid #E5E5E5}
+.sc-type{font-size:7.5px;padding:1px 5px;border-radius:8px;background:#000;color:#fff}
+.add-s{width:100%;padding:6px;border:1.5px dashed #DDD;border-radius:4px;background:transparent;font-size:10px;font-weight:700;color:#E8001D;cursor:pointer;font-family:inherit;transition:all .15s}
+.add-s:hover:not(:disabled){border-color:#E8001D;background:#FFF5F5}
+.add-s:disabled{opacity:.3;cursor:not-allowed}
+.cfg{border-top:2px solid #000;padding:12px 14px;flex-shrink:0;background:#fff;display:none;overflow-y:auto;max-height:62vh}
+.type-row{display:flex;gap:4px;margin-bottom:9px;flex-wrap:wrap}
+.tbtn{padding:5px 8px;border:1px solid #DDD;border-radius:3px;font-size:9.5px;font-weight:700;cursor:pointer;font-family:inherit;background:#fff;color:#AAA;transition:all .15s;white-space:nowrap}
+.tbtn.on{background:#000;color:#fff;border-color:#000}
+.ai-btn{width:100%;padding:7px;background:#1A56DB;color:#fff;border:none;border-radius:3px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:5px;transition:background .15s}
+.ai-btn:hover:not(:disabled){background:#1447C0}
+.ai-btn:disabled{opacity:.4;cursor:not-allowed}
+.ai-copied{display:none;font-size:10px;color:#16A34A;font-weight:600;text-align:center;margin-bottom:5px;padding:4px 8px;background:#F0FDF4;border-radius:3px;border:1px solid #BBF7D0}
+.ai-copied.show{display:block}
+.apply-btn{width:100%;padding:8px;background:#000;color:#fff;border:none;border-radius:3px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:8px;transition:background .15s}
+.apply-btn:hover{background:#333}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.mbar{height:34px;background:#fff;border-bottom:1px solid #E5E5E5;display:flex;align-items:center;padding:0 16px;gap:8px;flex-shrink:0}
+.mbar-t{font-size:10px;color:#888;flex:1}
+.stp{background:#F0F0F0;border:1px solid #E5E5E5;border-radius:20px;padding:2px 9px;font-size:9.5px;color:#666;display:none}
+.stp b{color:#222;font-weight:700}
+.cv-area{flex:1;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;gap:20px}
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;color:#CCC;text-align:center}
+.slide-lbl{font-size:8.5px;font-weight:700;color:#AAA;letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px}
+.cv-wrap{border:1px solid #CCC;border-radius:3px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,.12)}
+.cv-wrap canvas{display:block;width:100%}
+.save-btn{padding:5px 13px;border-radius:3px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;border:1px solid #16A34A;background:transparent;color:#16A34A;transition:all .15s}
+.save-btn:hover:not(:disabled){background:#16A34A;color:#fff}
+.save-btn:disabled{opacity:.3;cursor:not-allowed}
+.save-ok{font-size:10px;color:#16A34A;font-weight:600;display:none;margin-left:6px}
+.save-ok.show{display:inline}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <span class="hdr-logo">GARMIN.</span>
+  <div class="hdr-sep"></div>
+  <span class="hdr-sub">Social Report Builder</span>
+  <div class="hdr-btns">
+    <div class="spin-row" id="hdr-spin"><div class="spin"></div><span id="spin-txt">處理中</span></div>
+    <button class="hbtn" id="btn-preview" disabled>重新產生預覽</button>
+    <button class="save-btn" id="btn-save" disabled>↑ 存入 Sheets</button>
+    <span class="save-ok" id="save-ok">✓ 已儲存</span>
+    <button class="hbtn pri" id="btn-export" disabled>↓ 下載 PPTX</button>
+  </div>
+</div>
+<div class="app">
+  <div class="sb">
+    <div class="sb-top">
+      <div class="sec">
+        <div class="slbl">資料來源</div>
+        <div class="drop" id="drop-zone">
+          <div class="drop-ico">📁</div>
+          <div class="drop-name">上傳 Sprinklr CSV</div>
+          <div class="drop-sub">可同時選取多個 .csv 檔案（IG + FB）</div>
+        </div>
+        <input type="file" id="file-input" accept=".csv" multiple style="display:none">
+        <div class="up-stat" id="up-stat"></div>
+      </div>
+      <div class="sec">
+        <div class="slbl">預設時間區間</div>
+        <div class="row2">
+          <div class="fld"><label>開始</label><input type="date" id="g-d0"></div>
+          <div class="fld"><label>結束</label><input type="date" id="g-d1"></div>
+        </div>
+      </div>
+      <div class="sec">
+        <div class="slbl">Slide 管理</div>
+        <div class="smgr" id="smgr"></div>
+        <div style="height:5px"></div>
+        <button class="add-s" id="add-s" disabled>＋ 新增 Slide</button>
+      </div>
+    </div>
+    <div class="cfg" id="cfg">
+      <div class="slbl" style="margin-bottom:8px">Slide <span id="cfg-num">1</span> 設定</div>
+      <div class="fld"><label>名稱</label><input type="text" id="cfg-name" placeholder="例：Pokemon Campaign"></div>
+      <div class="row2">
+        <div class="fld"><label>開始</label><input type="date" id="cfg-d0"></div>
+        <div class="fld"><label>結束</label><input type="date" id="cfg-d1"></div>
+      </div>
+      <div class="slbl" style="margin-bottom:4px">平台</div>
+      <div class="plt-row" id="cfg-plats">
+        <button class="plt on-IG" data-p="IG">IG</button>
+        <button class="plt on-FB" data-p="FB">FB</button>
+        <button class="plt on-TH" data-p="TH">Threads</button>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <div class="slbl" style="margin:0">Campaign 篩選</div>
+        <button id="tog-all" style="font-size:9px;color:#E8001D;cursor:pointer;background:none;border:none;font-family:inherit;font-weight:600">全選／全消</button>
+      </div>
+      <div class="camp-wrap" id="cfg-camps"></div>
+      <div class="slbl" style="margin-top:9px;margin-bottom:4px">版面類型</div>
+      <div class="type-row">
+        <button class="tbtn on" id="t-rc">Monthly Recap</button>
+        <button class="tbtn" id="t-kpi">KPI Summary</button>
+        <button class="tbtn" id="t-tl">Content Timeline</button>
+        <button class="tbtn" id="t-hi">Campaign Highlight</button>
+      </div>
+      <div class="slbl" style="margin-bottom:4px">觀察摘要</div>
+      <button class="ai-btn" id="ai-btn" disabled>📋 複製 AI 分析提示詞</button>
+      <div class="ai-copied" id="ai-copied">✓ 已複製！貼到 Claude 對話框取得分析</div>
+      <div class="fld" style="margin-bottom:0">
+        <textarea id="insight-txt" placeholder="貼入 AI 分析結果，或手動填寫觀察與建議..."></textarea>
+      </div>
+      <button class="apply-btn" id="apply-btn">套用並更新預覽</button>
+    </div>
+  </div>
+  <div class="main">
+    <div class="mbar">
+      <div class="mbar-t" id="mbar-t">上傳 CSV 後，點「新增 Slide」開始建立報告</div>
+      <div class="stp" id="stp-p">貼文 <b id="c-p">0</b></div>
+      <div class="stp" id="stp-r">觸及 <b id="c-r">-</b></div>
+      <div class="stp" id="stp-e">互動 <b id="c-e">-</b></div>
+    </div>
+    <div class="cv-area" id="cv-area">
+      <div class="empty" id="empty">
+        <div style="font-size:32px;opacity:.15;font-weight:900;letter-spacing:.05em">GARMIN.</div>
+        <div style="font-size:11px;line-height:2.2;color:#BBB">1. 上傳 Sprinklr CSV<br>2. 點「新增 Slide」選擇版型<br>3. 套用並更新預覽，下載 PPTX</div>
+      </div>
+      <div id="slides-area"></div>
+    </div>
+  </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+
+// ============================================================
+// 尺寸：13.3333" × 7.5"（從原始 PPTX 解析）
+// Canvas display: 960 × 540
+// ============================================================
+var PW=13.3333, PH=7.5;
+var CW=960, CH=540;
+function px(inch){ return Math.round(inch/PW*CW); }
+function py(inch){ return Math.round(inch/PH*CH); }
+function ps(inch){ return Math.round(inch/PW*CW); } // uniform scale
+
+// ── 顏色（完全對齊原始 PPTX）──
+var BLK='#000000', WHT='#FFFFFF';
+var RED='#E8001D';        // Garmin 品牌紅
+var RED_DARK='#C00000';   // 深紅（標籤背景）
+var GREEN='#00B050';      // 成長指標
+var GRAY_LT='#E8E8E8';    // lt2（淺灰底）
+var GRAY_MID='#888888';   // 中灰
+var GRAY_DARK='#444444';  // 深灰文字
+var GOLD='#CC9900';       // 第1名
+var IG_C='#E1306C', FB_C='#1877F2', TH_C='#444444';
+
+// ── 版型常數（對齊 PPTX 座標）──
+
+// Monthly Recap (Slide 2 照抄)
+var RC={
+  logoX:0.3602, logoY:0.1836, logoW:0.899,
+  titleX:1.3962, titleY:0.3056, titleW:9.6101, titleH:0.6338,
+  divY:1.15,
+  // KPI table: x=8.4548(但我們要對齊 Slide2 的全幅 KPI 呈現方式)
+  kpiTableX:7.50, kpiTableY:0.28, kpiTableW:5.60, kpiTableH:0.72,
+  kpiColW:[1.1612,1.4971,2.3976], // from PPTX
+  insightX:0.4241, insightY:1.704, insightW:7.0559, insightH:0.934,
+  secLblX:0.2609, secLblY:3.5804, secLblW:5.2946, secLblH:0.3501,
+  chartX:0.4831, chartY:4.1867, chartW:12.4251, chartH:2.7419,
+  // Top3 exact positions from PPTX
+  t3:[
+    {x:6.055,  y:3.4376, w:1.7228, h:2.5625},
+    {x:8.517,  y:3.0742, w:1.6502, h:2.3868},
+    {x:10.3535,y:3.3661, w:1.6584, h:2.7054}
+  ],
+  medals:[
+    {x:7.5423, y:3.2323, w:0.3733, h:0.3733, c:GOLD},
+    {x:9.9802, y:2.8816, w:0.3733, h:0.3733, c:GRAY_MID},
+    {x:11.8248,y:3.2071, w:0.3733, h:0.3733, c:'#A0522D'}
+  ]
+};
+
+// KPI Summary (Slide 1 照抄 + 延伸)
+var KPI={
+  titleX:0.50, titleY:0.22, titleH:0.55,
+  subtitleY:0.78,
+  tableX:0.50, tableY:1.30,
+  tableW:12.33, rowH:0.72,
+  colW:[2.20,1.80,2.00,2.00,2.20,2.13], // 平台 | Post | Reach | Eng | Eng Rate | vs prev
+  headerH:0.38
+};
+
+// Content Timeline (延伸設計)
+var TL={
+  hdrZoneH:1.10,
+  iconX:0.28, iconY:0.20, iconR:0.26, iconGap:0.10,
+  titleX:1.30, titleY:0.18, titleH:0.50,
+  kpiX:9.00, kpiY:0.10, kpiW:4.10, kpiH:0.90,
+  kpiColW:[1.10,1.30,1.70],
+  tlY:1.22, tlH:0.008,
+  bulletX:0.28, bulletW:2.00,
+  cardAreaX:2.55, cardGap:0.20,
+  cardHdrH:0.26, imgRatio:0.50,
+  cardBottomH:2.20
+};
+
+// Campaign Highlight (延伸設計)
+var HI={
+  accentH:0.08,
+  titleX:0.50, titleY:0.22,
+  campLblX:0.50, campLblY:0.72,
+  divY:1.05,
+  statCols:[
+    {x:0.50,y:1.15,w:2.50},
+    {x:3.20,y:1.15,w:2.50},
+    {x:5.90,y:1.15,w:2.50},
+    {x:8.60,y:1.15,w:2.50}
+  ],
+  statH:1.20,
+  insightX:0.50, insightY:2.55, insightW:5.50, insightH:4.70,
+  cardAreaX:6.30, cardAreaY:2.55, cardAreaW:6.80,
+  cardGap:0.22, cardH:4.70
+};
+
+// ============================================================
+var allPosts=[], slides=[], activeId=null, availCamps=[];
+var TYPES=['rc','kpi','tl','hi'];
+var TYPE_LABELS={'rc':'Monthly Recap','kpi':'KPI Summary','tl':'Content Timeline','hi':'Campaign Highlight'};
+
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,5);}
+function fmt(n){if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1e3)return(n/1e3).toFixed(1)+'K';return String(n||0);}
+function fmtPct(n){return n.toFixed(1)+'%';}
+function platOf(t,permalink){
+  var u=(t||'').toUpperCase();
+  // Account Type 識別
+  if(u==='INSTAGRAM'||u.indexOf('INSTAGRAM')>=0)return'IG';
+  if(u==='FBPAGE'||u==='FACEBOOK'||u.indexOf('FACEBOOK')>=0)return'FB';
+  if(u==='TWITTER'||u.indexOf('TWITTER')>=0)return'TW';
+  if(u==='THREAD'||u.indexOf('THREAD')>=0)return'TH';
+  // fallback: 從 permalink 判斷
+  var p=(permalink||'').toLowerCase();
+  if(p.indexOf('instagram.com')>=0)return'IG';
+  if(p.indexOf('facebook.com')>=0||p.indexOf('fb.com')>=0)return'FB';
+  if(p.indexOf('threads.net')>=0)return'TH';
+  return'IG';
+}
+function cc(c){return(c||'').replace(/ - Asia \(US Marketing\)/g,'').replace(/ - Asia/g,'').trim();}
+function fp(sl){
+  return allPosts.filter(function(p){
+    if(sl.plats.length&&sl.plats.indexOf(p.platKey)<0)return false;
+    if(sl.camps.length&&sl.camps.indexOf(p.campaign)<0)return false;
+    if(sl.d0&&p.publishedTime.slice(0,10)<sl.d0)return false;
+    if(sl.d1&&p.publishedTime.slice(0,10)>sl.d1)return false;
+    return true;
+  });
+}
+function showSpin(m){document.getElementById('spin-txt').textContent=m;document.getElementById('hdr-spin').classList.add('show');}
+function hideSpin(){document.getElementById('hdr-spin').classList.remove('show');}
+
+// ── CSV Parser ──
+function parseCSV(text){
+  text=text.replace(/^\uFEFF/,'');
+  var idx=0,n=text.length,rows=[];
+  function field(){
+    if(idx>=n)return'';
+    if(text[idx]==='"'){idx++;var v='';while(idx<n){if(text[idx]==='"'){idx++;if(idx<n&&text[idx]==='"'){v+='"';idx++;}else break;}else v+=text[idx++];}return v;}
+    var v='';while(idx<n&&text[idx]!==','&&text[idx]!=='\n'&&text[idx]!=='\r')v+=text[idx++];return v.trim();
+  }
+  function row(){var f=[];while(idx<n){f.push(field());if(idx<n&&text[idx]===',')idx++;else break;}if(idx<n&&text[idx]==='\r')idx++;if(idx<n&&text[idx]==='\n')idx++;return f;}
+  var hdrs=row().map(function(h){return h.trim();});
+  while(idx<n){if(text[idx]==='\r'||text[idx]==='\n'){idx++;continue;}var cols=row();if(cols.length<3)continue;var obj={};hdrs.forEach(function(h,x){obj[h]=(cols[x]||'').trim();});rows.push(obj);}
+  return rows;
+}
+
+// ── Upload（支援多檔合併）──
+var dz=document.getElementById('drop-zone'),fi=document.getElementById('file-input');
+dz.addEventListener('click',function(){fi.click();});
+dz.addEventListener('dragover',function(e){e.preventDefault();dz.classList.add('drag');});
+dz.addEventListener('dragleave',function(){dz.classList.remove('drag');});
+dz.addEventListener('drop',function(e){
+  e.preventDefault();dz.classList.remove('drag');
+  var files=Array.from(e.dataTransfer.files).filter(function(f){return f.name.endsWith('.csv');});
+  if(files.length)loadFiles(files);
+});
+fi.addEventListener('change',function(){
+  var files=Array.from(fi.files);
+  if(files.length)loadFiles(files);
+});
+
+function parseToPost(row){
+  var permalink=row['Permalink']||'';
+  var accountType=row['Account Type']||'';
+  return {
+    post:row['Outbound Post']||'',
+    account:(row['Account']||'').toLowerCase(),
+    platKey:platOf(accountType, permalink),
+    campaign:row['Campaign Name']||row['Campaign']||'',
+    permalink:permalink,
+    publishedTime:row['PublishedTime']||row['ScheduledTime']||'',
+    reach:parseInt((row['Post Reach (SUM)']||'0').replace(/,/g,''))||0,
+    eng:parseInt((row['Engagements + Clicks (SUM)']||'0').replace(/,/g,''))||0
+  };
+}
+
+function loadFiles(files){
+  var stat=document.getElementById('up-stat');
+  stat.textContent='解析中… (0/'+files.length+')';
+  var results=[];
+  var completed=0;
+  var errors=[];
+
+  files.forEach(function(file,idx){
+    var r=new FileReader();
+    r.onload=function(e){
+      try{
+        var rows=parseCSV(e.target.result);
+        var posts=rows.map(parseToPost).filter(function(p){return p.publishedTime;});
+        results.push({name:file.name, posts:posts});
+      }catch(err){
+        errors.push(file.name+': '+err.message);
+      }
+      completed++;
+      stat.textContent='解析中… ('+completed+'/'+files.length+')';
+      if(completed===files.length){
+        finalizeLoad(results, errors);
+      }
+    };
+    r.readAsText(file,'UTF-8');
+  });
+}
+
+function finalizeLoad(results, errors){
+  var stat=document.getElementById('up-stat');
+
+  // 合併所有檔案的貼文，用 permalink 去重複
+  var seen_perm={};
+  var merged=[];
+  results.forEach(function(r){
+    r.posts.forEach(function(p){
+      var key=p.permalink||(p.publishedTime+p.post.slice(0,20));
+      if(!seen_perm[key]){seen_perm[key]=1;merged.push(p);}
+    });
+  });
+  // 依發布時間排序
+  merged.sort(function(a,b){return a.publishedTime<b.publishedTime?-1:1;});
+  allPosts=merged;
+
+  var dates=allPosts.map(function(p){return p.publishedTime.slice(0,10);}).filter(Boolean).sort();
+  if(dates.length){
+    document.getElementById('g-d0').value=dates[0];
+    document.getElementById('g-d1').value=dates[dates.length-1];
+  }
+  var seen={};availCamps=[];
+  allPosts.forEach(function(p){if(p.campaign&&!seen[p.campaign]){seen[p.campaign]=1;availCamps.push(p.campaign);}});
+  availCamps.sort();
+
+  // 更新 UI
+  var fileNames=results.map(function(r){return r.name.replace('.csv','');}).join(' + ');
+  dz.classList.add('ok');
+  dz.querySelector('.drop-name').textContent='✓ '+fileNames;
+  dz.querySelector('.drop-name').style.color='#16A34A';
+  dz.querySelector('.drop-sub').textContent=allPosts.length+' 筆 · '+availCamps.length+' Campaign';
+
+  var errMsg=errors.length?' ⚠ '+errors.length+' 個檔案失敗':'';
+  stat.innerHTML='<span class="ok-c">共 '+allPosts.length+' 筆成功合併（'+results.length+' 個檔案）</span>'+errMsg;
+
+  document.getElementById('add-s').disabled=false;
+  document.getElementById('btn-preview').disabled=false;
+}
+
+// ── Slide Manager ──
+document.getElementById('add-s').addEventListener('click',function(){
+  var id=uid(),num=slides.length+1;
+  slides.push({id:id,num:num,name:'Slide '+num,type:'rc',d0:document.getElementById('g-d0').value,d1:document.getElementById('g-d1').value,plats:['IG','FB','TH'],camps:availCamps.slice(),insight:''});
+  renderMgr();sel(id);
+});
+function delSlide(id){
+  slides=slides.filter(function(s){return s.id!==id;});slides.forEach(function(s,i){s.num=i+1;});
+  if(activeId===id)activeId=slides.length?slides[slides.length-1].id:null;
+  renderMgr();if(activeId)sel(activeId);else{document.getElementById('cfg').style.display='none';renderAll();}
+}
+function renderMgr(){
+  var mgr=document.getElementById('smgr');mgr.innerHTML='';
+  slides.forEach(function(s){
+    var card=document.createElement('div');card.className='scard'+(s.id===activeId?' active':'');
+    var head=document.createElement('div');head.className='sc-h';
+    var num=document.createElement('div');num.className='sc-n';num.textContent=s.num;
+    var lbl=document.createElement('div');lbl.className='sc-lbl';lbl.textContent=s.name;
+    var del=document.createElement('div');del.className='sc-del';del.textContent='×';
+    (function(sid){del.addEventListener('click',function(e){e.stopPropagation();delSlide(sid);});})(s.id);
+    head.appendChild(num);head.appendChild(lbl);head.appendChild(del);
+    var tags=document.createElement('div');tags.className='sc-tags';
+    s.camps.slice(0,3).forEach(function(c){var t=document.createElement('span');t.className='sc-tag';t.textContent=cc(c).slice(0,14);tags.appendChild(t);});
+    if(s.camps.length>3){var m=document.createElement('span');m.className='sc-tag';m.textContent='+'+(s.camps.length-3);tags.appendChild(m);}
+    var tt=document.createElement('span');tt.className='sc-type';tt.textContent=TYPE_LABELS[s.type]||s.type;tags.appendChild(tt);
+    card.appendChild(head);card.appendChild(tags);
+    (function(sid){card.addEventListener('click',function(){sel(sid);});})(s.id);
+    mgr.appendChild(card);
+  });
+}
+function sel(id){
+  activeId=id;renderMgr();
+  var s=slides.find(function(x){return x.id===id;});if(!s)return;
+  document.getElementById('cfg').style.display='block';
+  document.getElementById('cfg-num').textContent=s.num;
+  document.getElementById('cfg-name').value=s.name;
+  document.getElementById('cfg-d0').value=s.d0||'';
+  document.getElementById('cfg-d1').value=s.d1||'';
+  document.getElementById('insight-txt').value=s.insight||'';
+  document.querySelectorAll('#cfg-plats .plt').forEach(function(btn){var pl=btn.getAttribute('data-p');btn.className='plt'+(s.plats.indexOf(pl)>=0?' on-'+pl:'');});
+  TYPES.forEach(function(t){document.getElementById('t-'+t).className='tbtn'+(s.type===t?' on':'');});
+  document.getElementById('ai-btn').disabled=false;
+  renderCamps(s);
+}
+function renderCamps(s){
+  var wrap=document.getElementById('cfg-camps');wrap.innerHTML='';
+  availCamps.forEach(function(c){
+    var row=document.createElement('label');row.className='ci';
+    var cb=document.createElement('input');cb.type='checkbox';cb.checked=s.camps.indexOf(c)>=0;
+    (function(camp){cb.addEventListener('change',function(){if(cb.checked){if(s.camps.indexOf(camp)<0)s.camps.push(camp);}else s.camps=s.camps.filter(function(x){return x!==camp;});});})(c);
+    row.appendChild(cb);row.appendChild(document.createTextNode(' '+cc(c).slice(0,38)));wrap.appendChild(row);
+  });
+}
+document.querySelectorAll('#cfg-plats .plt').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    var s=slides.find(function(x){return x.id===activeId;});if(!s)return;
+    var pl=btn.getAttribute('data-p');var idx=s.plats.indexOf(pl);
+    if(idx>=0)s.plats.splice(idx,1);else s.plats.push(pl);
+    btn.className='plt'+(s.plats.indexOf(pl)>=0?' on-'+pl:'');
+  });
+});
+TYPES.forEach(function(t){
+  document.getElementById('t-'+t).addEventListener('click',function(){
+    var s=slides.find(function(x){return x.id===activeId;});if(!s)return;
+    s.type=t;TYPES.forEach(function(tt){document.getElementById('t-'+tt).className='tbtn'+(tt===t?' on':'');});renderMgr();
+  });
+});
+document.getElementById('tog-all').addEventListener('click',function(){
+  var s=slides.find(function(x){return x.id===activeId;});if(!s)return;
+  s.camps=s.camps.length===availCamps.length?[]:availCamps.slice();renderCamps(s);
+});
+document.getElementById('apply-btn').addEventListener('click',function(){
+  var s=slides.find(function(x){return x.id===activeId;});if(!s)return;
+  s.name=document.getElementById('cfg-name').value||s.name;
+  s.d0=document.getElementById('cfg-d0').value;s.d1=document.getElementById('cfg-d1').value;
+  s.insight=document.getElementById('insight-txt').value;
+  renderMgr();renderAll();
+});
+document.getElementById('btn-preview').addEventListener('click',renderAll);
+
+// ── AI 提示詞複製 ──
+document.getElementById('ai-btn').addEventListener('click',function(){
+  var s=slides.find(function(x){return x.id===activeId;});if(!s)return;
+  var posts=fp(s);
+  if(!posts.length){alert('此 Slide 沒有貼文資料');return;}
+  var totR=posts.reduce(function(a,p){return a+p.reach;},0);
+  var totE=posts.reduce(function(a,p){return a+p.eng;},0);
+  var er=totR>0?((totE/totR)*100).toFixed(1):'0';
+  var byCamp={};
+  posts.forEach(function(p){var k=cc(p.campaign)||'其他';if(!byCamp[k])byCamp[k]={cnt:0,reach:0,eng:0};byCamp[k].cnt++;byCamp[k].reach+=p.reach;byCamp[k].eng+=p.eng;});
+  var campLines=Object.keys(byCamp).sort(function(a,b){return byCamp[b].reach-byCamp[a].reach;}).map(function(k){var d=byCamp[k];var er2=d.reach>0?((d.eng/d.reach)*100).toFixed(1):'0';return'  - '+k+': '+d.cnt+'篇 觸及'+fmt(d.reach)+' 互動'+fmt(d.eng)+' 互動率'+er2+'%';}).join('\n');
+  var top5=posts.slice().sort(function(a,b){return b.reach-a.reach;}).slice(0,5);
+  var top5txt=top5.map(function(p,i){return'  '+(i+1)+'.['+p.platKey+'] '+p.publishedTime.slice(0,10)+' Reach:'+fmt(p.reach)+' Eng:'+fmt(p.eng)+'\n     Campaign:'+cc(p.campaign)+'\n     內容:'+p.post.replace(/\n/g,' ').slice(0,80);}).join('\n');
+  var prompt='你是 Garmin Taiwan 社群媒體分析師，請用繁體中文分析以下成效數據，提供 4-5 條 bullet point。\n\n【'+s.name+'】'+s.d0+' ～ '+s.d1+'\n總貼文:'+posts.length+' 觸及:'+fmt(totR)+' 互動:'+fmt(totE)+' 互動率:'+er+'%\n\n【各 Campaign】\n'+campLines+'\n\n【Top 5 貼文】\n'+top5txt+'\n\n請分析成效亮點、互動率觀察、未來可複製策略、需改進之處。每條以「•」開頭，不超過 50 字，直接輸出不需前言。';
+  var copied=document.getElementById('ai-copied');
+  try{navigator.clipboard.writeText(prompt).then(function(){copied.classList.add('show');setTimeout(function(){copied.classList.remove('show');},4000);}).catch(function(){var ta=document.createElement('textarea');ta.value=prompt;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);copied.classList.add('show');setTimeout(function(){copied.classList.remove('show');},4000);});}catch(e){alert('請手動複製');}
+});
+
+// ── Render All ──
+function renderAll(){
+  if(!slides.length){document.getElementById('btn-export').disabled=true;return;}
+  document.getElementById('empty').style.display='none';
+  var area=document.getElementById('slides-area');area.innerHTML='';
+  var totP=0,totR=0,totE=0;
+  showSpin('渲染預覽…');
+  setTimeout(function(){
+    slides.forEach(function(s){
+      var posts=fp(s);totP+=posts.length;posts.forEach(function(p){totR+=p.reach;totE+=p.eng;});
+      var wrap=document.createElement('div');
+      var lbl=document.createElement('div');lbl.className='slide-lbl';lbl.textContent='SLIDE '+s.num+' — '+s.name+' ('+posts.length+' 篇) · '+TYPE_LABELS[s.type];
+      wrap.appendChild(lbl);
+      var cvWrap=document.createElement('div');cvWrap.className='cv-wrap';
+      var cv=document.createElement('canvas');cv.width=CW;cv.height=CH;
+      cvWrap.appendChild(cv);wrap.appendChild(cvWrap);area.appendChild(wrap);
+      var ctx=cv.getContext('2d');ctx.fillStyle=WHT;ctx.fillRect(0,0,CW,CH);
+      if(s.type==='rc')drawRC(ctx,s,posts);
+      else if(s.type==='kpi')drawKPI(ctx,s,posts);
+      else if(s.type==='tl')drawTL(ctx,s,posts);
+      else drawHI(ctx,s,posts);
+    });
+    if(totP>0){document.getElementById('c-p').textContent=totP;document.getElementById('c-r').textContent=fmt(totR);document.getElementById('c-e').textContent=fmt(totE);['stp-p','stp-r','stp-e'].forEach(function(id){document.getElementById(id).style.display='';});document.getElementById('mbar-t').textContent='共 '+slides.length+' 頁 Slide';}
+    hideSpin();document.getElementById('btn-export').disabled=false;document.getElementById('btn-save').disabled=false;
+  },50);
+}
+
+// ── Canvas Helpers ──
+function wt(ctx,text,x,y,mw,lh,ml){
+  if(!text)return 0;
+  var chars=Array.from(String(text)),cur='',lines=[];
+  for(var ci=0;ci<chars.length&&lines.length<ml;ci++){var test=cur+chars[ci];if(ctx.measureText(test).width>mw&&cur){lines.push(cur);cur=chars[ci];}else cur=test;}
+  if(cur&&lines.length<ml)lines.push(cur);
+  lines.forEach(function(ln,idx){ctx.fillText(ln,x,y+idx*lh);});
+  return lines.length*lh;
+}
+function F(size){return size+'px "Noto Sans TC",sans-serif';}
+function FB(size){return 'bold '+size+'px "Noto Sans TC",sans-serif';}
+
+// ── CANVAS: MONTHLY RECAP (照抄 Slide 2) ──
+function drawRC(ctx,s,posts){
+  var totR=posts.reduce(function(a,p){return a+p.reach;},0);
+  var totE=posts.reduce(function(a,p){return a+p.eng;},0);
+  var top3=posts.slice().sort(function(a,b){return b.reach-a.reach;}).slice(0,3);
+  var byP={},byD={};
+  posts.forEach(function(p){if(!byP[p.platKey])byP[p.platKey]={posts:0,reach:0,eng:0};byP[p.platKey].posts++;byP[p.platKey].reach+=p.reach;byP[p.platKey].eng+=p.eng;});
+  posts.forEach(function(p){var d=p.publishedTime.slice(0,10);if(!byD[d])byD[d]={r:0,e:0};byD[d].r+=p.reach;byD[d].e+=p.eng;});
+  var dKeys=Object.keys(byD).sort();
+  var platC={IG:IG_C,FB:FB_C,TH:TH_C};
+
+  // Garmin logo circle
+  var lcx=px(RC.logoX+RC.logoW/2),lcy=py(RC.logoY+RC.logoW/2),lr=px(RC.logoW/2);
+  ctx.beginPath();ctx.arc(lcx,lcy,lr,0,Math.PI*2);ctx.fillStyle=WHT;ctx.fill();
+  ctx.strokeStyle=BLK;ctx.lineWidth=2;ctx.stroke();
+  ctx.fillStyle=BLK;ctx.font=FB(Math.round(lr*0.42));ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('GARMIN',lcx,lcy-lr*0.08);
+  ctx.font=F(Math.round(lr*0.28));ctx.fillText('.',lcx+lr*0.42,lcy-lr*0.25);
+
+  // Title
+  var mLbl='';
+  if(s.d0){try{mLbl=new Date(s.d0+'T00:00:00').toLocaleDateString('zh-TW',{year:'numeric',month:'long'});}catch(e){}}
+  var tx=px(RC.titleX),ty=py(RC.titleY);
+  ctx.fillStyle=BLK;ctx.textAlign='left';ctx.textBaseline='top';
+  ctx.font=F(py(0.22));
+  ctx.fillText('Monthly Performance Recap – ',tx,ty);
+  var w1=ctx.measureText('Monthly Performance Recap – ').width;
+  ctx.font=FB(py(0.22));ctx.fillText(mLbl,tx+w1,ty);
+  ctx.fillStyle=GRAY_MID;ctx.font=F(py(0.14));
+  ctx.fillText('('+s.d0+' ～ '+s.d1+')',tx,ty+py(0.28));
+
+  // Divider line
+  ctx.fillStyle=GRAY_LT;ctx.fillRect(px(0.25),py(RC.divY),CW-px(0.50),1);
+
+  // Per-platform KPI table (對齊 PPTX KPI 格式)
+  var platKeys=Object.keys(byP);
+  var kBlockW=(PW-0.50)/Math.max(platKeys.length,1);
+  platKeys.forEach(function(pk,pi){
+    var d=byP[pk];var er2=d.reach>0?((d.eng/d.reach)*100).toFixed(1):'0';
+    var kx2=px(0.25+pi*kBlockW),ky2=py(RC.divY+0.06),kw2=px(kBlockW)-px(0.08);
+    // Platform header bar
+    ctx.fillStyle=platC[pk]||GRAY_MID;ctx.fillRect(kx2,ky2,kw2,py(0.28));
+    ctx.fillStyle=WHT;ctx.font=FB(py(0.14));ctx.textAlign='left';ctx.textBaseline='middle';
+    ctx.fillText(pk+' · '+d.posts+' 篇',kx2+8,ky2+py(0.14));
+    ctx.textAlign='right';ctx.fillText('互動率 '+er2+'%',kx2+kw2-8,ky2+py(0.14));
+    // KPI cells
+    var cols2=['Post','Reach/Post','Engagement'];
+    var rPerPost=d.posts>0?fmt(Math.round(d.reach/d.posts)):'-';
+    var vals2=[String(d.posts),rPerPost,fmt(d.eng)];
+    var cellW2=Math.floor(kw2/3);
+    cols2.forEach(function(col,ci){
+      var cx3=kx2+ci*cellW2,cy3=ky2+py(0.28);
+      ctx.fillStyle=ci===0?'#F8F8F8':'#FFFFFF';ctx.fillRect(cx3,cy3,cellW2,py(0.42));
+      ctx.strokeStyle=GRAY_LT;ctx.lineWidth=0.5;ctx.strokeRect(cx3,cy3,cellW2,py(0.42));
+      ctx.fillStyle=GRAY_MID;ctx.font=F(py(0.12));ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText(col,cx3+cellW2/2,cy3+3);
+      ctx.fillStyle=BLK;ctx.font=FB(py(0.20));ctx.textBaseline='bottom';ctx.fillText(vals2[ci],cx3+cellW2/2,cy3+py(0.42)-3);
+    });
+  });
+
+  // Insight bullets
+  var ins=s.insight||'';var bl=ins.split('\n').filter(function(l){return l.trim();}).slice(0,4);
+  if(bl.length){
+    var bx=px(RC.insightX),by=py(RC.insightY);
+    ctx.font=F(py(0.16));
+    bl.forEach(function(line){
+      ctx.fillStyle=BLK;ctx.beginPath();ctx.arc(bx+4,by+py(0.09),py(0.04),0,Math.PI*2);ctx.fill();
+      ctx.fillStyle=GRAY_DARK;ctx.textAlign='left';ctx.textBaseline='top';
+      wt(ctx,line.replace(/^[●•\-\s]+/,''),bx+12,by,px(RC.insightW)-14,py(0.20),2);
+      by+=py(0.24);
+    });
+  }
+
+  // Section label — black band
+  var slx=px(RC.secLblX),sly=py(RC.secLblY),slw=px(RC.secLblW),slh=py(RC.secLblH);
+  ctx.fillStyle=BLK;ctx.fillRect(slx,sly,slw,slh);
+  ctx.fillStyle=WHT;ctx.font=FB(py(0.16));ctx.textAlign='left';ctx.textBaseline='middle';
+  ctx.fillText('每日觸及與互動趨勢  &  Top 3 post',slx+px(0.12),sly+slh/2);
+
+  // Chart area
+  var chx=px(RC.chartX),chy=py(RC.chartY),chw=px(RC.chartW),chh=py(RC.chartH);
+  ctx.fillStyle='#FAFAFA';ctx.fillRect(chx,chy,chw,chh);
+  ctx.strokeStyle=GRAY_LT;ctx.lineWidth=0.5;ctx.strokeRect(chx,chy,chw,chh);
+  if(dKeys.length){
+    var maxR2=Math.max.apply(null,dKeys.map(function(d){return byD[d].r;}))||1;
+    var plotH=chh-py(0.28);
+    var bw2=Math.max(3,Math.floor((chw-px(0.20))/dKeys.length)-1);
+    for(var gi=1;gi<=4;gi++){var gy=chy+Math.round(plotH/4*gi);ctx.strokeStyle='#EEEEEE';ctx.lineWidth=0.5;ctx.beginPath();ctx.moveTo(chx,gy);ctx.lineTo(chx+chw,gy);ctx.stroke();}
+    dKeys.forEach(function(d,di){
+      var bh3=Math.round((byD[d].r/maxR2)*plotH);
+      var bxd=chx+px(0.10)+Math.round(di*(chw-px(0.20))/dKeys.length);
+      ctx.fillStyle=RED;ctx.globalAlpha=0.9;ctx.fillRect(bxd,chy+plotH-bh3,Math.max(bw2,2),bh3);ctx.globalAlpha=1;
+    });
+    ctx.fillStyle=GRAY_MID;ctx.font=F(py(0.10));ctx.textAlign='center';ctx.textBaseline='top';
+    var step=Math.ceil(dKeys.length/10);
+    dKeys.forEach(function(d,di){if(di%step===0)ctx.fillText(d.slice(5),chx+px(0.10)+Math.round(di*(chw-px(0.20))/dKeys.length)+bw2/2,chy+plotH+2);});
+    // legend
+    ctx.fillStyle=RED;ctx.fillRect(chx+px(0.10),chy+py(0.04),px(0.10),py(0.07));
+    ctx.fillStyle=GRAY_DARK;ctx.font=F(py(0.10));ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText('Post Reach',chx+px(0.22),chy+py(0.075));
+  }
+
+  // Top 3 post cards (exact PPTX positions)
+  var medalC2=[GOLD,'#C0C0C0','#A0522D'];
+  top3.slice(0,3).forEach(function(pp,idx){
+    var t=RC.t3[idx];var t2=RC.medals[idx];
+    var tx2=px(t.x),ty2=py(t.y),tw2=px(t.w),th2=py(t.h);
+    var imgH3=Math.round(th2*0.54);
+    ctx.fillStyle=WHT;ctx.strokeStyle='#CCCCCC';ctx.lineWidth=0.8;
+    ctx.fillRect(tx2,ty2,tw2,th2);ctx.strokeRect(tx2,ty2,tw2,th2);
+    ctx.fillStyle=GRAY_LT;ctx.fillRect(tx2,ty2,tw2,imgH3);
+    // placeholder image area
+    ctx.fillStyle=GRAY_MID;ctx.font=py(0.18)+'px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('📷',tx2+tw2/2,ty2+imgH3/2);
+    // Red line
+    ctx.fillStyle=RED;ctx.fillRect(tx2,ty2+imgH3,tw2,2);
+    var si=ty2+imgH3+2;
+    ctx.fillStyle=BLK;ctx.font=FB(py(0.13));ctx.textAlign='left';ctx.textBaseline='top';
+    ctx.fillText('Reach  '+fmt(pp.reach),tx2+5,si+py(0.05));
+    ctx.fillText('Engagement  '+fmt(pp.eng),tx2+5,si+py(0.20));
+    ctx.fillStyle=GRAY_MID;ctx.font=F(py(0.11));
+    wt(ctx,cc(pp.campaign).slice(0,22),tx2+4,si+py(0.36),tw2-8,py(0.14),2);
+    // Medal circle
+    var mx=px(t2.x),my=py(t2.y),mr=px(t2.w/2);
+    ctx.fillStyle=medalC2[idx];ctx.beginPath();ctx.arc(mx+mr,my+mr,mr,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=WHT;ctx.font=FB(py(0.16));ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(String(idx+1),mx+mr,my+mr);
+  });
+}
+
+// ── CANVAS: KPI SUMMARY (照抄 Slide 1 延伸) ──
+function drawKPI(ctx,s,posts){
+  var totR=posts.reduce(function(a,p){return a+p.reach;},0);
+  var totE=posts.reduce(function(a,p){return a+p.eng;},0);
+  var er=totR>0?((totE/totR)*100).toFixed(1):'0';
+  var byP={};
+  posts.forEach(function(p){if(!byP[p.platKey])byP[p.platKey]={posts:0,reach:0,eng:0};byP[p.platKey].posts++;byP[p.platKey].reach+=p.reach;byP[p.platKey].eng+=p.eng;});
+
+  // Title
+  ctx.fillStyle=BLK;ctx.font=FB(py(0.28));ctx.textAlign='left';ctx.textBaseline='top';
+  ctx.fillText(s.name,px(KPI.titleX),py(KPI.titleY));
+  ctx.fillStyle=GRAY_MID;ctx.font=F(py(0.16));
+  ctx.fillText(s.d0+' ～ '+s.d1+' ｜ 共 '+posts.length+' 篇',px(KPI.titleX),py(KPI.subtitleY));
+
+  // Divider
+  ctx.fillStyle=GRAY_LT;ctx.fillRect(px(0.50),py(1.05),CW-px(1.0),2);
+  ctx.fillStyle=BLK;ctx.fillRect(px(0.50),py(1.05),px(1.2),2);
+
+  // Table header
+  var tx3=px(KPI.tableX),ty3=py(KPI.tableY),tw3=px(KPI.tableW);
+  var cols3=['平台','篇數','總觸及','總互動','互動率'];
+  var cw3=[px(1.8),px(1.6),px(2.4),px(2.4),px(2.0)];
+  var hh=py(KPI.headerH);
+  ctx.fillStyle=BLK;ctx.fillRect(tx3,ty3,tw3,hh);
+  var cx3=tx3;
+  cols3.forEach(function(col,ci){
+    ctx.fillStyle=WHT;ctx.font=FB(py(0.14));ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(col,cx3+cw3[ci]/2,ty3+hh/2);
+    if(ci<cols3.length-1){ctx.strokeStyle='#333';ctx.lineWidth=0.5;ctx.beginPath();ctx.moveTo(cx3+cw3[ci],ty3);ctx.lineTo(cx3+cw3[ci],ty3+hh);ctx.stroke();}
+    cx3+=cw3[ci];
+  });
+
+  // Data rows
+  var platKeys=Object.keys(byP);
+  var platC={IG:IG_C,FB:FB_C,TH:TH_C};
+  var rowH=py(KPI.rowH);
+  platKeys.forEach(function(pk,ri){
+    var d=byP[pk];var er2=d.reach>0?((d.eng/d.reach)*100).toFixed(1):'0';
+    var ry=ty3+hh+ri*rowH;
+    ctx.fillStyle=ri%2===0?'#FAFAFA':WHT;ctx.fillRect(tx3,ry,tw3,rowH);
+    ctx.strokeStyle=GRAY_LT;ctx.lineWidth=0.5;ctx.strokeRect(tx3,ry,tw3,rowH);
+    var rowVals=[null,String(d.posts),fmt(d.reach),fmt(d.eng),er2+'%'];
+    cx3=tx3;
+    rowVals.forEach(function(val,ci){
+      if(ci===0){
+        // Platform badge
+        ctx.fillStyle=platC[pk]||GRAY_MID;ctx.fillRect(cx3+8,ry+rowH/2-py(0.12),px(0.30),py(0.24));
+        ctx.fillStyle=WHT;ctx.font=FB(py(0.13));ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.fillText(pk,cx3+8+px(0.15),ry+rowH/2);
+        ctx.fillStyle=BLK;ctx.textAlign='left';ctx.fillText(pk==='IG'?'Instagram':pk==='FB'?'Facebook':'Threads',cx3+px(0.44),ry+rowH/2);
+      } else {
+        ctx.fillStyle=BLK;ctx.font=FB(py(0.20));ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.fillText(val,cx3+cw3[ci]/2,ry+rowH/2);
+      }
+      if(ci<rowVals.length-1){ctx.strokeStyle=GRAY_LT;ctx.lineWidth=0.5;ctx.beginPath();ctx.moveTo(cx3+cw3[ci],ry);ctx.lineTo(cx3+cw3[ci],ry+rowH);ctx.stroke();}
+      cx3+=cw3[ci];
+    });
+  });
+
+  // Total row
+  var tRow=ty3+hh+platKeys.length*rowH;
+  ctx.fillStyle='#F0F0F0';ctx.fillRect(tx3,tRow,tw3,rowH);
+  ctx.strokeStyle=GRAY_LT;ctx.lineWidth=0.5;ctx.strokeRect(tx3,tRow,tw3,rowH);
+  var totalVals=[null,String(posts.length),fmt(totR),fmt(totE),er+'%'];
+  cx3=tx3;
+  totalVals.forEach(function(val,ci){
+    if(ci===0){ctx.fillStyle=BLK;ctx.font=FB(py(0.16));ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('Total',cx3+cw3[ci]/2,tRow+rowH/2);}
+    else{ctx.fillStyle=BLK;ctx.font=FB(py(0.20));ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(val,cx3+cw3[ci]/2,tRow+rowH/2);}
+    if(ci<totalVals.length-1){ctx.strokeStyle='#BBB';ctx.lineWidth=0.5;ctx.beginPath();ctx.moveTo(cx3+cw3[ci],tRow);ctx.lineTo(cx3+cw3[ci],tRow+rowH);ctx.stroke();}
+    cx3+=cw3[ci];
+  });
+
+  // Insight
+  var ins=s.insight||'';var bl=ins.split('\n').filter(function(l){return l.trim();}).slice(0,5);
+  if(bl.length){
+    var insY=tRow+rowH+py(0.25);
+    ctx.fillStyle=BLK;ctx.fillRect(px(0.50),insY,px(0.04),py(0.22));
+    ctx.font=FB(py(0.14));ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText('觀察',px(0.60),insY+py(0.11));
+    insY+=py(0.32);
+    ctx.font=F(py(0.14));
+    bl.forEach(function(line){
+      ctx.fillStyle=BLK;ctx.beginPath();ctx.arc(px(0.56),insY+py(0.08),py(0.03),0,Math.PI*2);ctx.fill();
+      ctx.fillStyle=GRAY_DARK;ctx.textAlign='left';ctx.textBaseline='top';
+      wt(ctx,line.replace(/^[●•\-\s]+/,''),px(0.64),insY,CW-px(1.10),py(0.18),2);
+      insY+=py(0.22);
+    });
+  }
+}
+
+// ── CANVAS: CONTENT TIMELINE (延伸設計) ──
+function drawTL(ctx,s,posts){
+  var totR=posts.reduce(function(a,p){return a+p.reach;},0);
+  var totE=posts.reduce(function(a,p){return a+p.eng;},0);
+  var top3=posts.slice().sort(function(a,b){return b.reach-a.reach;}).slice(0,3);
+  var n3=Math.min(top3.length,3);
+  var platC={IG:IG_C,FB:FB_C,TH:TH_C};
+
+  // Header zone (white, clean)
+  ctx.fillStyle=WHT;ctx.fillRect(0,0,CW,py(TL.hdrZoneH));
+  ctx.fillStyle=GRAY_LT;ctx.fillRect(0,py(TL.hdrZoneH),CW,1);
+
+  // Platform icons (circles)
+  var ix=px(TL.iconX),iy=py(TL.iconY),ir=px(TL.iconR);
+  (s.plats||[]).forEach(function(pl){
+    ctx.fillStyle=platC[pl]||GRAY_MID;ctx.beginPath();ctx.arc(ix+ir,iy+ir,ir,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=WHT;ctx.font=FB(Math.round(ir*0.7));ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(pl,ix+ir,iy+ir);ix+=px(TL.iconR*2+TL.iconGap);
+  });
+
+  // Title
+  ctx.fillStyle=BLK;ctx.font=FB(py(0.30));ctx.textAlign='left';ctx.textBaseline='top';
+  ctx.fillText('Social Content  |  '+s.name,px(TL.titleX),py(TL.titleY));
+  if(s.d0||s.d1){ctx.fillStyle=GRAY_MID;ctx.font=F(py(0.14));ctx.fillText(s.d0+' ～ '+s.d1,px(TL.titleX),py(TL.titleY+0.34));}
+
+  // KPI box (right side, black bg white text)
+  var kx4=px(TL.kpiX),ky4=py(TL.kpiY),kw4=px(TL.kpiW),kh4=py(TL.kpiH);
+  var kColPx=TL.kpiColW.map(function(c){return px(c);});
+  var krh=Math.floor(kh4/2);
+  ctx.strokeStyle='#222';ctx.lineWidth=1.5;ctx.strokeRect(kx4,ky4,kw4,kh4);
+  ['Post','Reach','Engagement'].forEach(function(col,ci){
+    var cx4=kx4+kColPx.slice(0,ci).reduce(function(a,b){return a+b;},0);
+    ctx.fillStyle=BLK;ctx.fillRect(cx4,ky4,kColPx[ci],krh);
+    ctx.strokeStyle='#444';ctx.lineWidth=0.3;ctx.strokeRect(cx4,ky4,kColPx[ci],krh);
+    ctx.fillStyle=WHT;ctx.font=FB(py(0.12));ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(col,cx4+kColPx[ci]/2,ky4+krh/2);
+    ctx.fillStyle=WHT;ctx.fillRect(cx4,ky4+krh,kColPx[ci],krh);
+    ctx.strokeStyle='#333';ctx.lineWidth=0.3;ctx.strokeRect(cx4,ky4+krh,kColPx[ci],krh);
+    ctx.fillStyle=BLK;ctx.font=FB(py(0.22));ctx.textAlign='center';ctx.textBaseline='middle';
+    var vals4=[String(posts.length),fmt(totR),fmt(totE)+'+'];
+    ctx.fillText(vals4[ci],cx4+kColPx[ci]/2,ky4+krh+krh/2);
+  });
+
+  // Timeline line
+  ctx.fillStyle='#CCCCCC';ctx.fillRect(px(0.15),py(TL.tlY),CW-px(0.30),py(TL.tlH));
+
+  // Card geometry
+  var cardBulletEnd=px(TL.bulletX)+px(TL.bulletW)+px(0.22);
+  var cardTotalW3=CW-cardBulletEnd-px(0.20);
+  var cw5=(cardTotalW3-(n3-1)*px(TL.cardGap))/Math.max(n3,1);
+  var cardH5=CH-py(TL.tlY+0.10)-py(0.15);
+
+  // Timeline dots
+  top3.slice(0,n3).forEach(function(pp,idx){
+    var cx5=cardBulletEnd+idx*(cw5+px(TL.cardGap))+cw5/2;
+    ctx.fillStyle='#AAAAAA';ctx.beginPath();ctx.arc(cx5,py(TL.tlY),5,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=GRAY_MID;ctx.font=F(py(0.12));ctx.textAlign='center';ctx.textBaseline='bottom';
+    ctx.fillText(pp.publishedTime.slice(5,10),cx5,py(TL.tlY)-5);
+  });
+
+  // Bullets (left)
+  var ins=s.insight||'';var bl=ins.split('\n').filter(function(l){return l.trim();}).slice(0,8);
+  if(!bl.length)bl=['共 '+posts.length+' 篇貼文','總觸及 '+fmt(totR),'總互動 '+fmt(totE)];
+  var lx=px(TL.bulletX),ly=py(TL.tlY+0.08);
+  ctx.font=F(py(0.14));
+  bl.forEach(function(line){
+    ctx.fillStyle=BLK;ctx.beginPath();ctx.arc(lx+4,ly+py(0.08),py(0.03),0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=GRAY_DARK;ctx.textAlign='left';ctx.textBaseline='top';
+    var used=wt(ctx,line.replace(/^[●•\-\s]+/,''),lx+11,ly,px(TL.bulletW)-12,py(0.18),3);
+    ly+=Math.max(used,py(0.18))+py(0.05);
+  });
+
+  // Cards
+  top3.slice(0,n3).forEach(function(pp,idx){
+    var cx5=cardBulletEnd+idx*(cw5+px(TL.cardGap));
+    var cy5=py(TL.tlY+0.10);
+    var imgH5=Math.round(cardH5*TL.imgRatio);
+    var infoH5=cardH5-py(TL.cardHdrH)-imgH5;
+    ctx.strokeStyle='#CCCCCC';ctx.lineWidth=0.8;ctx.strokeRect(cx5,cy5,cw5,cardH5);
+    ctx.fillStyle=BLK;ctx.fillRect(cx5,cy5,cw5,py(TL.cardHdrH));
+    ctx.fillStyle=WHT;ctx.font=F(py(0.13));ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(pp.platKey+' · '+pp.publishedTime.slice(0,10),cx5+cw5/2,cy5+py(TL.cardHdrH)/2);
+    var imgY5=cy5+py(TL.cardHdrH);
+    ctx.fillStyle=GRAY_LT;ctx.fillRect(cx5,imgY5,cw5,imgH5);
+    ctx.font=Math.round(imgH5*0.22)+'px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('📷',cx5+cw5/2,imgY5+imgH5/2);
+    var infoY5=imgY5+imgH5;
+    ctx.fillStyle=WHT;ctx.fillRect(cx5,infoY5,cw5,infoH5);
+    ctx.fillStyle=RED;ctx.fillRect(cx5,infoY5,cw5,2);
+    var sY5=infoY5+2;
+    ctx.fillStyle=BLK;ctx.font=FB(py(0.14));ctx.textAlign='left';ctx.textBaseline='top';
+    ctx.fillText('Reach  '+fmt(pp.reach),cx5+px(0.10),sY5+py(0.04));
+    ctx.fillText('Engagement  '+fmt(pp.eng),cx5+px(0.10),sY5+py(0.21));
+    ctx.fillStyle=GRAY_MID;ctx.font=F(py(0.11));
+    wt(ctx,cc(pp.campaign).slice(0,26),cx5+px(0.10),sY5+py(0.39),cw5-px(0.18),py(0.15),2);
+    ctx.fillStyle='#555';ctx.font=F(py(0.11));
+    wt(ctx,pp.post.replace(/\n/g,' ').slice(0,120),cx5+px(0.10),sY5+py(0.58),cw5-px(0.18),py(0.14),4);
+  });
+}
+
+// ── CANVAS: CAMPAIGN HIGHLIGHT (延伸設計) ──
+function drawHI(ctx,s,posts){
+  var totR=posts.reduce(function(a,p){return a+p.reach;},0);
+  var totE=posts.reduce(function(a,p){return a+p.eng;},0);
+  var er=totR>0?((totE/totR)*100).toFixed(1):'0';
+  var top3=posts.slice().sort(function(a,b){return b.reach-a.reach;}).slice(0,3);
+  var byCamp={};
+  posts.forEach(function(p){var k=cc(p.campaign)||'其他';if(!byCamp[k])byCamp[k]={cnt:0,reach:0,eng:0};byCamp[k].cnt++;byCamp[k].reach+=p.reach;byCamp[k].eng+=p.eng;});
+  var topCamp=Object.keys(byCamp).sort(function(a,b){return byCamp[b].reach-byCamp[a].reach;})[0]||'';
+
+  // Top red accent bar
+  ctx.fillStyle=RED;ctx.fillRect(0,0,CW,py(HI.accentH));
+
+  // Title + campaign label
+  ctx.fillStyle=BLK;ctx.font=F(py(0.16));ctx.textAlign='left';ctx.textBaseline='top';
+  ctx.fillText('CAMPAIGN PERFORMANCE REPORT',px(HI.titleX),py(HI.titleY));
+  ctx.font=FB(py(0.32));ctx.fillText(s.name,px(HI.titleX),py(HI.campLblY));
+  ctx.fillStyle=GRAY_MID;ctx.font=F(py(0.14));
+  ctx.fillText(s.d0+' ～ '+s.d1,px(HI.titleX),py(HI.campLblY+0.38));
+
+  // Divider
+  ctx.fillStyle=GRAY_LT;ctx.fillRect(px(0.50),py(HI.divY),CW-px(1.0),1.5);
+
+  // 4 stat cards
+  var stats=[
+    {label:'總貼文數',val:String(posts.length)+'篇',sub:''},
+    {label:'總觸及',val:fmt(totR),sub:''},
+    {label:'總互動',val:fmt(totE),sub:''},
+    {label:'平均互動率',val:er+'%',sub:''}
+  ];
+  HI.statCols.forEach(function(col,ci){
+    var sx=px(col.x),sy=py(col.y),sw=px(col.w),sh=py(HI.statH);
+    ctx.fillStyle='#F8F8F8';ctx.fillRect(sx,sy,sw,sh);
+    ctx.strokeStyle=GRAY_LT;ctx.lineWidth=0.5;ctx.strokeRect(sx,sy,sw,sh);
+    ctx.fillStyle=BLK;ctx.fillRect(sx,sy,sw,3);
+    ctx.fillStyle=GRAY_MID;ctx.font=F(py(0.14));ctx.textAlign='left';ctx.textBaseline='top';
+    ctx.fillText(stats[ci].label,sx+10,sy+py(0.14));
+    ctx.fillStyle=BLK;ctx.font=FB(py(0.34));ctx.textBaseline='middle';
+    ctx.fillText(stats[ci].val,sx+10,sy+py(0.72));
+  });
+
+  // Left: insight bullets
+  var ins=s.insight||'';var bl=ins.split('\n').filter(function(l){return l.trim();}).slice(0,8);
+  if(!bl.length)bl=['共 '+posts.length+' 篇貼文','總觸及 '+fmt(totR),'總互動 '+fmt(totE),'互動率 '+er+'%'];
+  var lx2=px(HI.insightX),ly2=py(HI.insightY);
+  // Section label
+  ctx.fillStyle=BLK;ctx.fillRect(lx2,ly2,3,py(0.24));
+  ctx.font=FB(py(0.16));ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText('觀察與建議',lx2+8,ly2+py(0.12));
+  ly2+=py(0.36);
+  ctx.font=F(py(0.15));
+  bl.forEach(function(line){
+    ctx.fillStyle=RED;ctx.beginPath();ctx.arc(lx2+4,ly2+py(0.08),py(0.035),0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#222';ctx.textAlign='left';ctx.textBaseline='top';
+    var used=wt(ctx,line.replace(/^[●•\-\s]+/,''),lx2+12,ly2,px(HI.insightW)-14,py(0.20),3);
+    ly2+=Math.max(used,py(0.20))+py(0.08);
+  });
+
+  // Right: Top 3 cards
+  var cw6=px(HI.cardAreaW-(top3.length-1)*HI.cardGap)/Math.max(top3.length,1);
+  // fallback: 2 col if only 2 posts
+  if(top3.length<3)cw6=(px(HI.cardAreaW)-px(HI.cardGap))/2;
+  var ch6=py(HI.cardH);
+  top3.slice(0,3).forEach(function(pp,idx){
+    var cx6=px(HI.cardAreaX)+idx*(cw6+px(HI.cardGap));
+    var cy6=py(HI.cardAreaY);
+    var imgH6=Math.round(ch6*0.48);
+    ctx.strokeStyle='#CCCCCC';ctx.lineWidth=0.8;ctx.strokeRect(cx6,cy6,cw6,ch6);
+    ctx.fillStyle=GRAY_LT;ctx.fillRect(cx6,cy6,cw6,imgH6);
+    ctx.font=Math.round(imgH6*0.20)+'px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('📷',cx6+cw6/2,cy6+imgH6/2);
+    ctx.fillStyle=RED;ctx.fillRect(cx6,cy6+imgH6,cw6,3);
+    var si2=cy6+imgH6+3;
+    ctx.fillStyle=BLK;ctx.font=FB(py(0.15));ctx.textAlign='left';ctx.textBaseline='top';
+    ctx.fillText('Reach  '+fmt(pp.reach),cx6+px(0.10),si2+py(0.05));
+    ctx.fillText('Engagement  '+fmt(pp.eng),cx6+px(0.10),si2+py(0.22));
+    ctx.fillStyle=GRAY_MID;ctx.font=F(py(0.12));
+    wt(ctx,cc(pp.campaign).slice(0,26),cx6+px(0.10),si2+py(0.40),cw6-px(0.18),py(0.15),2);
+    ctx.fillStyle='#555';ctx.font=F(py(0.12));
+    wt(ctx,pp.post.replace(/\n/g,' ').slice(0,100),cx6+px(0.10),si2+py(0.60),cw6-px(0.18),py(0.14),4);
+    // ranking badge
+    var badgeC=[GOLD,'#C0C0C0','#A0522D'][idx];
+    ctx.fillStyle=badgeC;ctx.fillRect(cx6,cy6,px(0.30),py(0.28));
+    ctx.fillStyle=WHT;ctx.font=FB(py(0.18));ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(String(idx+1),cx6+px(0.15),cy6+py(0.14));
+  });
+}
+
+// ── PPTX Export ──
+// ── 存入 Google Sheets ──
+var SHEETS_URL = 'https://script.google.com/macros/s/AKfycbyDxdq-laqVmyF-4BphzebY5keoSLa81fY0v-J3P1wkOpJVrILWhn-QAAcnWUnoZrD3OA/exec';
+
+document.getElementById('btn-save').addEventListener('click', function() {
+  if (!allPosts.length) return;
+  var btn = document.getElementById('btn-save');
+  var ok = document.getElementById('save-ok');
+  btn.disabled = true;
+  btn.textContent = '儲存中…';
+  ok.classList.remove('show');
+
+  // 整理每個平台的月度數據
+  var byP = {};
+  allPosts.forEach(function(p) {
+    if (!byP[p.platKey]) byP[p.platKey] = {posts:0,reach:0,eng:0,camps:{}};
+    byP[p.platKey].posts++;
+    byP[p.platKey].reach += p.reach;
+    byP[p.platKey].eng += p.eng;
+    if (p.campaign) byP[p.platKey].camps[cc(p.campaign)] = 1;
+  });
+
+  // 取得時間區間
+  var dates = allPosts.map(function(p) { return p.publishedTime.slice(0,10); }).filter(Boolean).sort();
+  var dateRange = dates.length ? dates[0] + ' ～ ' + dates[dates.length-1] : '';
+  var month = dates.length ? dates[0].slice(0,7) : new Date().toISOString().slice(0,7);
+
+  // 組成要寫入的 rows（每個平台一行）
+  var rows = Object.keys(byP).map(function(pk) {
+    var d = byP[pk];
+    var er = d.reach > 0 ? ((d.eng/d.reach)*100).toFixed(1) : '0';
+    var topCamps = Object.keys(d.camps).slice(0,3).join(', ');
+    return {
+      month: month,
+      platform: pk,
+      posts: d.posts,
+      reach: d.reach,
+      engagement: d.eng,
+      er: er,
+      topCampaign: topCamps,
+      dateRange: dateRange
+    };
+  });
+
+  fetch(SHEETS_URL, {
+    method: 'POST',
+    headers: {'Content-Type': 'text/plain'},
+    body: JSON.stringify({ action: 'saveReport', rows: rows })
+  })
+  .then(function(res) { return res.json(); })
+  .then(function(data) {
+    if (data.status === 'ok') {
+      ok.textContent = '✓ 已存入 Sheets（' + data.added + ' 筆）';
+      ok.classList.add('show');
+      setTimeout(function() { ok.classList.remove('show'); }, 5000);
+    } else {
+      alert('儲存失敗：' + JSON.stringify(data));
+    }
+    btn.textContent = '↑ 存入 Sheets';
+    btn.disabled = false;
+  })
+  .catch(function(err) {
+    alert('連線失敗：' + err.message + '\n\n請確認工具已放在 GitHub Pages 上執行。');
+    btn.textContent = '↑ 存入 Sheets';
+    btn.disabled = false;
+  });
+});
+
+document.getElementById('btn-export').addEventListener('click',function(){
+  if(!slides.length)return;
+  var btn=document.getElementById('btn-export');btn.disabled=true;btn.textContent='產生中…';showSpin('匯出 PPTX…');
+  setTimeout(function(){
+    try{
+      var pres=new PptxGenJS();
+      pres.defineLayout({name:'G1333',width:PW,height:PH});pres.layout='G1333';
+      slides.forEach(function(s){
+        var posts=fp(s);
+        if(s.type==='rc')pptRC(pres,s,posts);
+        else if(s.type==='kpi')pptKPI(pres,s,posts);
+        else if(s.type==='tl')pptTL(pres,s,posts);
+        else pptHI(pres,s,posts);
+      });
+      pres.writeFile({fileName:'Garmin_Report_'+new Date().toISOString().slice(0,10)+'.pptx'});
+    }catch(err){alert('匯出失敗：'+err.message);}
+    btn.textContent='↓ 下載 PPTX';btn.disabled=false;hideSpin();
+  },80);
+});
+
+function pptRC(pres,s,posts){
+  var sl=pres.addSlide();sl.background={color:'FFFFFF'};
+  var totR=posts.reduce(function(a,p){return a+p.reach;},0);
+  var totE=posts.reduce(function(a,p){return a+p.eng;},0);
+  var top3=posts.slice().sort(function(a,b){return b.reach-a.reach;}).slice(0,3);
+  var byP={},byD={};
+  posts.forEach(function(p){if(!byP[p.platKey])byP[p.platKey]={posts:0,reach:0,eng:0};byP[p.platKey].posts++;byP[p.platKey].reach+=p.reach;byP[p.platKey].eng+=p.eng;});
+  posts.forEach(function(p){var d=p.publishedTime.slice(0,10);if(!byD[d])byD[d]={r:0,e:0};byD[d].r+=p.reach;byD[d].e+=p.eng;});
+  var dKeys=Object.keys(byD).sort();
+  var platC2={IG:'E1306C',FB:'1877F2',TH:'444444'};
+
+  // Logo circle
+  sl.addShape(pres.shapes.OVAL,{x:RC.logoX,y:RC.logoY,w:RC.logoW,h:RC.logoW,fill:{color:'FFFFFF'},line:{color:'000000',pt:1.5}});
+  sl.addText('GARMIN.',{x:RC.logoX,y:RC.logoY,w:RC.logoW,h:RC.logoW,fontSize:7,bold:true,align:'center',valign:'middle',color:'000000',fontFace:'Noto Sans TC'});
+
+  // Title
+  var mLbl='';if(s.d0){try{mLbl=new Date(s.d0+'T00:00:00').toLocaleDateString('zh-TW',{year:'numeric',month:'long'});}catch(e){}}
+  sl.addText([{text:'Monthly Performance Recap – ',options:{bold:false,color:'000000'}},{text:mLbl,options:{bold:true,color:'000000'}}],{x:RC.titleX,y:RC.titleY,w:RC.titleW,h:0.36,fontSize:18,valign:'middle',fontFace:'Noto Sans TC'});
+  sl.addText('('+s.d0+' ～ '+s.d1+')',{x:RC.titleX,y:RC.titleY+0.37,w:8,h:0.22,fontSize:11,color:'888888',fontFace:'LINE Seed TW_TTF Regular'});
+
+  // Divider
+  sl.addShape(pres.shapes.RECTANGLE,{x:0.25,y:RC.divY,w:PW-0.50,h:0.007,fill:{color:'E8E8E8'},line:{color:'E8E8E8'}});
+
+  // Per-platform KPI
+  var platKeys=Object.keys(byP);var kBlockW=(PW-0.50)/Math.max(platKeys.length,1);
+  platKeys.forEach(function(pk,pi){
+    var d=byP[pk];var er2=d.reach>0?((d.eng/d.reach)*100).toFixed(1):'0';
+    var kx5=0.25+pi*kBlockW,kw5=kBlockW-0.08;
+    var rPerPost=d.posts>0?fmt(Math.round(d.reach/d.posts)):'-';
+    sl.addShape(pres.shapes.RECTANGLE,{x:kx5,y:RC.divY+0.06,w:kw5,h:0.28,fill:{color:platC2[pk]||'888888'},line:{color:platC2[pk]||'888888'}});
+    sl.addText(pk+' · '+d.posts+' 篇',{x:kx5+0.08,y:RC.divY+0.06,w:kw5*0.55,h:0.28,fontSize:10,bold:true,color:'FFFFFF',valign:'middle',fontFace:'LINE Seed TW_TTF Regular'});
+    sl.addText('互動率 '+er2+'%',{x:kx5+kw5*0.55,y:RC.divY+0.06,w:kw5*0.40,h:0.28,fontSize:9,color:'FFFFFF',valign:'middle',align:'right',fontFace:'LINE Seed TW_TTF Regular'});
+    var kr=[
+      [{text:'Post',options:{bold:true,fontSize:9,align:'center',fill:{color:'F8F8F8'},color:'444444'}},{text:'Reach/Post',options:{bold:true,fontSize:9,align:'center',fill:{color:'F8F8F8'},color:'444444'}},{text:'Engagement',options:{bold:true,fontSize:9,align:'center',fill:{color:'F8F8F8'},color:'444444'}}],
+      [{text:String(d.posts),options:{fontSize:14,bold:true,align:'center',color:'000000'}},{text:rPerPost,options:{fontSize:14,bold:true,align:'center',color:'000000'}},{text:fmt(d.eng),options:{fontSize:14,bold:true,align:'center',color:'000000'}}]
+    ];
+    sl.addTable(kr,{x:kx5,y:RC.divY+0.34,w:kw5,h:0.52,border:{pt:0.4,color:'E8E8E8'}});
+  });
+
+  // Insight
+  var ins=s.insight||'';var bl=ins.split('\n').filter(function(l){return l.trim();}).slice(0,4);
+  if(bl.length){
+    sl.addText(bl.map(function(l){return{text:l.replace(/^[●•\-\s]+/,''),options:{bullet:{type:'bullet'},breakLine:true}};}),
+      {x:RC.insightX,y:RC.insightY,w:RC.insightW,h:RC.insightH,fontSize:12,color:'444444',paraSpaceAfter:3,lineSpacingMultiple:1.3,fontFace:'LINE Seed TW_TTF Regular'});
+  }
+
+  // Section label
+  sl.addShape(pres.shapes.RECTANGLE,{x:RC.secLblX,y:RC.secLblY,w:RC.secLblW,h:RC.secLblH,fill:{color:'000000'},line:{color:'000000'}});
+  sl.addText('每日觸及與互動趨勢  &  Top 3 post',{x:RC.secLblX+0.10,y:RC.secLblY,w:RC.secLblW-0.12,h:RC.secLblH,fontSize:11,bold:true,color:'FFFFFF',valign:'middle',fontFace:'Noto Sans TC'});
+
+  // Chart
+  if(dKeys.length){
+    sl.addChart(pres.charts.BAR,[{name:'Post Reach',labels:dKeys.map(function(d){return d.slice(5);}),values:dKeys.map(function(d){return byD[d].r;})},{name:'Engagement',labels:dKeys.map(function(d){return d.slice(5);}),values:dKeys.map(function(d){return byD[d].e;})}],
+      {x:RC.chartX,y:RC.chartY,w:RC.chartW,h:RC.chartH,barDir:'col',chartColors:['E8001D','888888'],chartArea:{fill:{color:'FAFAFA'}},catAxisLabelColor:'888888',valAxisLabelColor:'888888',catAxisLabelFontSize:8,valAxisLabelFontSize:8,catGridLine:{style:'none'},valGridLine:{color:'EEEEEE',size:0.3},showLegend:true,legendPos:'t',legendFontSize:8});
+  }
+
+  // Top 3
+  var medalC3=['CC9900','C0C0C0','A0522D'];
+  top3.slice(0,3).forEach(function(pp,idx){
+    var t=RC.t3[idx];var med=RC.medals[idx];var imgH7=t.h*0.54;var infoH7=t.h-imgH7;
+    sl.addShape(pres.shapes.RECTANGLE,{x:t.x,y:t.y,w:t.w,h:t.h,fill:{color:'FFFFFF'},line:{color:'CCCCCC',pt:0.8}});
+    sl.addShape(pres.shapes.RECTANGLE,{x:t.x,y:t.y,w:t.w,h:imgH7,fill:{color:'E8E8E8'},line:{color:'CCCCCC',pt:0.3}});
+    sl.addText('📷',{x:t.x,y:t.y,w:t.w,h:imgH7,fontSize:24,align:'center',valign:'middle'});
+    sl.addShape(pres.shapes.RECTANGLE,{x:t.x,y:t.y+imgH7,w:t.w,h:0.025,fill:{color:'E8001D'},line:{color:'E8001D'}});
+    var sY6=t.y+imgH7+0.025;
+    sl.addText('Reach  '+fmt(pp.reach),{x:t.x+0.06,y:sY6+0.04,w:t.w-0.08,h:0.22,fontSize:10,bold:true,color:'000000',fontFace:'LINE Seed TW_TTF Regular'});
+    sl.addText('Engagement  '+fmt(pp.eng),{x:t.x+0.06,y:sY6+0.24,w:t.w-0.08,h:0.22,fontSize:10,bold:true,color:'000000',fontFace:'LINE Seed TW_TTF Regular'});
+    sl.addText(cc(pp.campaign).slice(0,20),{x:t.x+0.05,y:sY6+0.46,w:t.w-0.08,h:infoH7-0.54,fontSize:8,color:'888888',wrap:true,align:'center',fontFace:'LINE Seed TW_TTF Regular'});
+    sl.addShape(pres.shapes.OVAL,{x:med.x,y:med.y,w:med.w,h:med.h,fill:{color:medalC3[idx]},line:{color:medalC3[idx]}});
+    sl.addText(String(idx+1),{x:med.x,y:med.y,w:med.w,h:med.h,fontSize:13,bold:true,color:'FFFFFF',align:'center',valign:'middle',fontFace:'Aptos'});
+  });
+}
+
+function pptKPI(pres,s,posts){
+  var sl=pres.addSlide();sl.background={color:'FFFFFF'};
+  var totR=posts.reduce(function(a,p){return a+p.reach;},0);
+  var totE=posts.reduce(function(a,p){return a+p.eng;},0);
+  var er=posts.length&&totR>0?((totE/totR)*100).toFixed(1):'0';
+  var byP={};
+  posts.forEach(function(p){if(!byP[p.platKey])byP[p.platKey]={posts:0,reach:0,eng:0};byP[p.platKey].posts++;byP[p.platKey].reach+=p.reach;byP[p.platKey].eng+=p.eng;});
+  var platC4={IG:'E1306C',FB:'1877F2',TH:'444444'};
+
+  sl.addText(s.name,{x:KPI.tableX,y:0.22,w:10,h:0.52,fontSize:26,bold:true,color:'000000',fontFace:'LINE Seed TW_TTF Regular'});
+  sl.addText(s.d0+' ～ '+s.d1+' ｜ 共 '+posts.length+' 篇',{x:KPI.tableX,y:0.76,w:8,h:0.22,fontSize:11,color:'888888',fontFace:'LINE Seed TW_TTF Regular'});
+  sl.addShape(pres.shapes.RECTANGLE,{x:KPI.tableX,y:1.06,w:KPI.tableW,h:0.012,fill:{color:'000000'},line:{color:'000000'}});
+
+  // Table
+  var cols5=['平台','篇數','總觸及','總互動','互動率'];
+  var hd=cols5.map(function(c){return{text:c,options:{bold:true,color:'FFFFFF',fill:{color:'000000'},align:'center',fontSize:11}};});
+  var allRows=[hd];
+  Object.keys(byP).forEach(function(pk){
+    var d=byP[pk];var er2=d.reach>0?((d.eng/d.reach)*100).toFixed(1):'0';
+    var rpp=d.posts>0?fmt(Math.round(d.reach/d.posts)):'-';
+    allRows.push([
+      {text:pk,options:{bold:true,color:'FFFFFF',fill:{color:platC4[pk]||'888888'},align:'center',fontSize:12}},
+      {text:String(d.posts),options:{align:'center',fontSize:14,bold:true,color:'000000'}},
+      {text:fmt(d.reach),options:{align:'center',fontSize:14,bold:true,color:'000000'}},
+      {text:fmt(d.eng),options:{align:'center',fontSize:14,bold:true,color:'000000'}},
+      {text:er2+'%',options:{align:'center',fontSize:14,bold:true,color:'000000'}}
+    ]);
+  });
+  allRows.push([
+    {text:'Total',options:{bold:true,fill:{color:'F0F0F0'},align:'center',fontSize:12,color:'000000'}},
+    {text:String(posts.length),options:{align:'center',fontSize:14,bold:true,color:'000000',fill:{color:'F0F0F0'}}},
+    {text:fmt(totR),options:{align:'center',fontSize:14,bold:true,color:'000000',fill:{color:'F0F0F0'}}},
+    {text:fmt(totE),options:{align:'center',fontSize:14,bold:true,color:'000000',fill:{color:'F0F0F0'}}},
+    {text:er+'%',options:{align:'center',fontSize:14,bold:true,color:'000000',fill:{color:'F0F0F0'}}}
+  ]);
+  sl.addTable(allRows,{x:KPI.tableX,y:1.30,w:KPI.tableW,h:KPI.rowH*(allRows.length-1)+0.38,border:{pt:0.4,color:'E8E8E8'}});
+
+  var ins=s.insight||'';var bl=ins.split('\n').filter(function(l){return l.trim();}).slice(0,5);
+  if(bl.length){
+    var insY2=1.30+KPI.rowH*allRows.length+0.30;
+    sl.addShape(pres.shapes.RECTANGLE,{x:KPI.tableX,y:insY2,w:0.04,h:0.24,fill:{color:'000000'},line:{color:'000000'}});
+    sl.addText('觀察',{x:KPI.tableX+0.08,y:insY2,w:2,h:0.24,fontSize:12,bold:true,color:'000000',valign:'middle',fontFace:'LINE Seed TW_TTF Regular'});
+    sl.addText(bl.map(function(l){return{text:l.replace(/^[●•\-\s]+/,''),options:{bullet:{type:'bullet'},breakLine:true}};}),
+      {x:KPI.tableX,y:insY2+0.32,w:KPI.tableW,h:PH-insY2-0.50,fontSize:12,color:'444444',paraSpaceAfter:3,lineSpacingMultiple:1.3,fontFace:'LINE Seed TW_TTF Regular'});
+  }
+}
+
+function pptTL(pres,s,posts){
+  var sl=pres.addSlide();sl.background={color:'FFFFFF'};
+  var totR=posts.reduce(function(a,p){return a+p.reach;},0);
+  var totE=posts.reduce(function(a,p){return a+p.eng;},0);
+  var top3=posts.slice().sort(function(a,b){return b.reach-a.reach;}).slice(0,3);
+  var n3=Math.min(top3.length,3);
+  var platC5={IG:'E1306C',FB:'1877F2',TH:'444444'};
+
+  // Platform icons
+  var ix2=TL.iconX;
+  s.plats.forEach(function(pl){
+    sl.addShape(pres.shapes.OVAL,{x:ix2,y:TL.iconY,w:TL.iconR*2,h:TL.iconR*2,fill:{color:platC5[pl]||'888888'},line:{color:platC5[pl]||'888888'}});
+    sl.addText(pl,{x:ix2,y:TL.iconY,w:TL.iconR*2,h:TL.iconR*2,fontSize:9,bold:true,color:'FFFFFF',align:'center',valign:'middle',fontFace:'Noto Sans TC'});
+    ix2+=TL.iconR*2+TL.iconGap;
+  });
+
+  sl.addText('Social Content  |  '+s.name,{x:TL.titleX,y:TL.titleY,w:6.5,h:TL.titleH,fontSize:20,bold:true,color:'000000',valign:'middle',fontFace:'LINE Seed TW_TTF Regular'});
+  if(s.d0||s.d1)sl.addText(s.d0+' ～ '+s.d1,{x:TL.titleX,y:TL.titleY+0.38,w:5,h:0.20,fontSize:10,color:'888888',fontFace:'LINE Seed TW_TTF Regular'});
+
+  // KPI table
+  var kd2=[[{text:'Post',options:{bold:true,color:'FFFFFF',fill:{color:'000000'},align:'center',fontSize:10}},{text:'Reach',options:{bold:true,color:'FFFFFF',fill:{color:'000000'},align:'center',fontSize:10}},{text:'Engagement',options:{bold:true,color:'FFFFFF',fill:{color:'000000'},align:'center',fontSize:10}}],[{text:String(posts.length),options:{align:'center',bold:true,fontSize:17,color:'000000',fill:{color:'FFFFFF'}}},{text:fmt(totR),options:{align:'center',bold:true,fontSize:17,color:'000000',fill:{color:'FFFFFF'}}},{text:fmt(totE)+'+',options:{align:'center',bold:true,fontSize:17,color:'000000',fill:{color:'FFFFFF'}}}]];
+  sl.addTable(kd2,{x:TL.kpiX,y:TL.kpiY,w:TL.kpiW,h:TL.kpiH,border:{pt:1.2,color:'222222'},colW:TL.kpiColW});
+
+  sl.addShape(pres.shapes.RECTANGLE,{x:0.15,y:TL.tlY,w:PW-0.30,h:TL.tlH,fill:{color:'CCCCCC'},line:{color:'CCCCCC'}});
+
+  var cardBulletEnd2=TL.cardAreaX;
+  var cardTotalW4=PW-cardBulletEnd2-0.20;
+  var cw7=(cardTotalW4-(n3-1)*TL.cardGap)/Math.max(n3,1);
+  var cardH7=PH-TL.tlY-0.10-0.15;
+
+  var ins=s.insight||'';var bl=ins.split('\n').filter(function(l){return l.trim();}).slice(0,8);
+  if(!bl.length)bl=['共 '+posts.length+' 篇貼文','總觸及 '+fmt(totR),'總互動 '+fmt(totE)];
+  sl.addText(bl.map(function(l){return{text:l.replace(/^[●•\-\s]+/,''),options:{bullet:{type:'bullet'},breakLine:true}};}),
+    {x:TL.bulletX,y:TL.tlY+0.08,w:TL.bulletW,h:cardH7-0.08,fontSize:11,color:'333333',paraSpaceAfter:4,lineSpacingMultiple:1.2,fontFace:'LINE Seed TW_TTF Regular'});
+
+  top3.slice(0,n3).forEach(function(pp,idx){
+    var cx8=cardBulletEnd2+idx*(cw7+TL.cardGap);
+    var cy8=TL.tlY+0.08;
+    var imgH8=cardH7*TL.imgRatio;var infoH8=cardH7-TL.cardHdrH-imgH8;
+    var dotX3=cx8+cw7/2;
+    sl.addShape(pres.shapes.OVAL,{x:dotX3-0.055,y:TL.tlY-0.055,w:0.11,h:0.11,fill:{color:'AAAAAA'},line:{color:'AAAAAA'}});
+    sl.addText(pp.publishedTime.slice(5,10),{x:dotX3-0.32,y:TL.tlY-0.22,w:0.64,h:0.16,fontSize:8,color:'888888',align:'center',fontFace:'Noto Sans TC'});
+    sl.addShape(pres.shapes.RECTANGLE,{x:cx8,y:cy8,w:cw7,h:cardH7,fill:{color:'FFFFFF'},line:{color:'CCCCCC',pt:0.8}});
+    sl.addShape(pres.shapes.RECTANGLE,{x:cx8,y:cy8,w:cw7,h:TL.cardHdrH,fill:{color:'000000'},line:{color:'000000'}});
+    sl.addText(pp.platKey+' · '+pp.publishedTime.slice(0,10),{x:cx8,y:cy8,w:cw7,h:TL.cardHdrH,fontSize:8,color:'AAAAAA',align:'center',valign:'middle',fontFace:'Noto Sans TC'});
+    sl.addShape(pres.shapes.RECTANGLE,{x:cx8,y:cy8+TL.cardHdrH,w:cw7,h:imgH8,fill:{color:'E8E8E8'},line:{color:'CCCCCC',pt:0.3}});
+    sl.addText('📷',{x:cx8,y:cy8+TL.cardHdrH,w:cw7,h:imgH8,fontSize:28,align:'center',valign:'middle'});
+    sl.addShape(pres.shapes.RECTANGLE,{x:cx8,y:cy8+TL.cardHdrH+imgH8,w:cw7,h:infoH8,fill:{color:'FFFFFF'},line:{color:'CCCCCC',pt:0.3}});
+    sl.addShape(pres.shapes.RECTANGLE,{x:cx8,y:cy8+TL.cardHdrH+imgH8,w:cw7,h:0.03,fill:{color:'E8001D'},line:{color:'E8001D'}});
+    var sY8=cy8+TL.cardHdrH+imgH8+0.03;
+    sl.addText('Reach  '+fmt(pp.reach),{x:cx8+0.09,y:sY8+0.04,w:cw7-0.12,h:0.24,fontSize:11,bold:true,color:'000000',fontFace:'LINE Seed TW_TTF Regular'});
+    sl.addText('Engagement  '+fmt(pp.eng),{x:cx8+0.09,y:sY8+0.28,w:cw7-0.12,h:0.24,fontSize:11,bold:true,color:'000000',fontFace:'LINE Seed TW_TTF Regular'});
+    sl.addText(cc(pp.campaign).slice(0,28),{x:cx8+0.09,y:sY8+0.54,w:cw7-0.12,h:0.18,fontSize:9,color:'888888',fontFace:'LINE Seed TW_TTF Regular'});
+    sl.addText(pp.post.replace(/\n/g,' ').slice(0,130),{x:cx8+0.09,y:sY8+0.72,w:cw7-0.12,h:infoH8-0.80,fontSize:9,color:'555555',wrap:true,fontFace:'Noto Sans TC'});
+  });
+}
+
+function pptHI(pres,s,posts){
+  var sl=pres.addSlide();sl.background={color:'FFFFFF'};
+  var totR=posts.reduce(function(a,p){return a+p.reach;},0);
+  var totE=posts.reduce(function(a,p){return a+p.eng;},0);
+  var er=totR>0?((totE/totR)*100).toFixed(1):'0';
+  var top3=posts.slice().sort(function(a,b){return b.reach-a.reach;}).slice(0,3);
+
+  sl.addShape(pres.shapes.RECTANGLE,{x:0,y:0,w:PW,h:HI.accentH,fill:{color:'E8001D'},line:{color:'E8001D'}});
+  sl.addText('CAMPAIGN PERFORMANCE REPORT',{x:HI.titleX,y:HI.titleY,w:9,h:0.22,fontSize:11,color:'888888',fontFace:'Noto Sans TC'});
+  sl.addText(s.name,{x:HI.titleX,y:HI.campLblY,w:9,h:0.44,fontSize:26,bold:true,color:'000000',fontFace:'LINE Seed TW_TTF Regular'});
+  sl.addText(s.d0+' ～ '+s.d1,{x:HI.titleX,y:HI.campLblY+0.46,w:6,h:0.22,fontSize:11,color:'888888',fontFace:'LINE Seed TW_TTF Regular'});
+  sl.addShape(pres.shapes.RECTANGLE,{x:0.50,y:HI.divY,w:PW-1.0,h:0.012,fill:{color:'E8E8E8'},line:{color:'E8E8E8'}});
+
+  var stats9=[{l:'總貼文數',v:String(posts.length)+'篇'},{l:'總觸及',v:fmt(totR)},{l:'總互動',v:fmt(totE)},{l:'平均互動率',v:er+'%'}];
+  HI.statCols.forEach(function(col,ci){
+    sl.addShape(pres.shapes.RECTANGLE,{x:col.x,y:col.y,w:col.w,h:HI.statH,fill:{color:'F8F8F8'},line:{color:'E8E8E8',pt:0.5}});
+    sl.addShape(pres.shapes.RECTANGLE,{x:col.x,y:col.y,w:col.w,h:0.04,fill:{color:'000000'},line:{color:'000000'}});
+    sl.addText(stats9[ci].l,{x:col.x+0.10,y:col.y+0.14,w:col.w-0.14,h:0.22,fontSize:11,color:'888888',fontFace:'LINE Seed TW_TTF Regular'});
+    sl.addText(stats9[ci].v,{x:col.x+0.10,y:col.y+0.40,w:col.w-0.14,h:0.60,fontSize:24,bold:true,color:'000000',valign:'middle',fontFace:'LINE Seed TW_TTF Regular'});
+  });
+
+  var ins=s.insight||'';var bl=ins.split('\n').filter(function(l){return l.trim();}).slice(0,8);
+  if(!bl.length)bl=['共 '+posts.length+' 篇貼文','總觸及 '+fmt(totR),'總互動 '+fmt(totE)];
+  sl.addShape(pres.shapes.RECTANGLE,{x:HI.insightX,y:HI.insightY,w:0.04,h:0.24,fill:{color:'000000'},line:{color:'000000'}});
+  sl.addText('觀察與建議',{x:HI.insightX+0.08,y:HI.insightY,w:3,h:0.24,fontSize:12,bold:true,color:'000000',valign:'middle',fontFace:'LINE Seed TW_TTF Regular'});
+  sl.addText(bl.map(function(l){return{text:l.replace(/^[●•\-\s]+/,''),options:{bullet:{type:'bullet'},breakLine:true}};}),
+    {x:HI.insightX,y:HI.insightY+0.34,w:HI.insightW,h:HI.insightH-0.36,fontSize:12,color:'333333',paraSpaceAfter:5,lineSpacingMultiple:1.35,fontFace:'LINE Seed TW_TTF Regular'});
+
+  var cw9=(HI.cardAreaW-(top3.length-1)*HI.cardGap)/Math.max(top3.length,1);
+  var ch9=HI.cardH;var medalC4=['CC9900','C0C0C0','A0522D'];
+  top3.slice(0,3).forEach(function(pp,idx){
+    var cx9=HI.cardAreaX+idx*(cw9+HI.cardGap);var cy9=HI.cardAreaY;var imgH9=ch9*0.48;var infoH9=ch9-imgH9;
+    sl.addShape(pres.shapes.RECTANGLE,{x:cx9,y:cy9,w:cw9,h:ch9,fill:{color:'FFFFFF'},line:{color:'CCCCCC',pt:0.8}});
+    sl.addShape(pres.shapes.RECTANGLE,{x:cx9,y:cy9,w:cw9,h:imgH9,fill:{color:'E8E8E8'},line:{color:'CCCCCC',pt:0.3}});
+    sl.addText('📷',{x:cx9,y:cy9,w:cw9,h:imgH9,fontSize:24,align:'center',valign:'middle'});
+    sl.addShape(pres.shapes.RECTANGLE,{x:cx9,y:cy9+imgH9,w:cw9,h:0.03,fill:{color:'E8001D'},line:{color:'E8001D'}});
+    var sY9=cy9+imgH9+0.03;
+    sl.addText('Reach  '+fmt(pp.reach),{x:cx9+0.08,y:sY9+0.04,w:cw9-0.10,h:0.24,fontSize:11,bold:true,color:'000000',fontFace:'LINE Seed TW_TTF Regular'});
+    sl.addText('Engagement  '+fmt(pp.eng),{x:cx9+0.08,y:sY9+0.27,w:cw9-0.10,h:0.24,fontSize:11,bold:true,color:'000000',fontFace:'LINE Seed TW_TTF Regular'});
+    sl.addText(cc(pp.campaign).slice(0,26),{x:cx9+0.07,y:sY9+0.52,w:cw9-0.10,h:infoH9-0.58,fontSize:9,color:'888888',wrap:true,fontFace:'LINE Seed TW_TTF Regular'});
+    sl.addShape(pres.shapes.RECTANGLE,{x:cx9,y:cy9,w:0.34,h:0.28,fill:{color:medalC4[idx]},line:{color:medalC4[idx]}});
+    sl.addText(String(idx+1),{x:cx9,y:cy9,w:0.34,h:0.28,fontSize:14,bold:true,color:'FFFFFF',align:'center',valign:'middle',fontFace:'Aptos'});
+  });
+}
+
+
+}); // DOMContentLoaded
+</script>
+</body>
+</html>
