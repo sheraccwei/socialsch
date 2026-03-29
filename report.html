@@ -1465,6 +1465,10 @@ function setPdfMode(mode) {
   document.getElementById('mode-full').className = 'mode-pill' + (mode === 'full' ? ' active' : '');
 }
 
+// Fix: also wire up mode pills via addEventListener (belt + suspenders)
+document.getElementById('mode-insight').addEventListener('click', function(){ setPdfMode('insight'); });
+document.getElementById('mode-full').addEventListener('click', function(){ setPdfMode('full'); });
+
 document.getElementById('pdf-input').addEventListener('change', function() {
   var file = this.files[0];
   if (!file) return;
