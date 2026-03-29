@@ -93,6 +93,16 @@ html,body{height:100%;overflow:hidden;font-family:'Noto Sans TC',sans-serif;font
 .save-btn:disabled{opacity:.3;cursor:not-allowed}
 .save-ok{font-size:10px;color:#16A34A;font-weight:600;display:none;margin-left:6px}
 .save-ok.show{display:inline}
+.pdf-drop{border:1.5px dashed #C5D4DF;border-radius:4px;padding:9px 8px;text-align:center;cursor:pointer;background:#F4F8FA;transition:all .15s;font-size:10px;color:#7591A8;font-weight:600}
+.pdf-drop:hover{border-color:#7591A8;background:#EAF0F5}
+.pdf-drop.ok{border-color:#7591A8;border-style:solid;background:#EAF0F5;color:#4a6f87}
+.mode-pill{flex:1;padding:4px 6px;border:1px solid #D0DCE4;border-radius:20px;font-size:9.5px;font-weight:600;cursor:pointer;font-family:inherit;background:#fff;color:#AAA;transition:all .12s}
+.mode-pill.active{background:#7591A8;border-color:#7591A8;color:#fff}
+.pdf-analyze-btn{width:100%;margin-top:5px;padding:7px;background:#7591A8;color:#fff;border:none;border-radius:3px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s}
+.pdf-analyze-btn:hover:not(:disabled){background:#5f7a8f}
+.pdf-analyze-btn:disabled{opacity:.35;cursor:not-allowed}
+.pdf-spin-row{display:none;align-items:center;gap:6px;font-size:10px;color:#7591A8;margin-top:5px}
+.pdf-spin-row.show{display:flex}
 </style>
 </head>
 <body>
@@ -161,6 +171,20 @@ html,body{height:100%;overflow:hidden;font-family:'Noto Sans TC',sans-serif;font
         <button class="tbtn" id="t-hi">Campaign Highlight</button>
       </div>
       <div class="slbl" style="margin-bottom:4px">觀察摘要</div>
+
+      <div id="pdf-section" style="margin-bottom:8px">
+        <div class="pdf-drop" id="pdf-drop" onclick="document.getElementById('pdf-input').click()">
+          <span id="pdf-drop-txt">📄 上傳月報 PDF，AI 自動分析</span>
+        </div>
+        <input type="file" id="pdf-input" accept=".pdf" style="display:none">
+        <div style="display:flex;gap:4px;margin-top:5px">
+          <button class="mode-pill active" id="mode-insight" onclick="setPdfMode('insight')">洞察摘要</button>
+          <button class="mode-pill" id="mode-full" onclick="setPdfMode('full')">完整月報</button>
+        </div>
+        <button class="pdf-analyze-btn" id="pdf-analyze-btn" disabled onclick="analyzePdf()">AI 分析 PDF →</button>
+        <div class="pdf-spin-row" id="pdf-spin-row"><div class="spin"></div><span>分析中，請稍候…</span></div>
+      </div>
+
       <button class="ai-btn" id="ai-btn" disabled>📋 複製 AI 分析提示詞</button>
       <div class="ai-copied" id="ai-copied">✓ 已複製！貼到 Claude 對話框取得分析</div>
       <div class="fld" style="margin-bottom:0">
@@ -279,6 +303,7 @@ var HI={
 
 // ============================================================
 var allPosts=[], slides=[], activeId=null, availCamps=[];
+var kpiHistory={'FB':[],'IG':[]}; // 從 Sheets 載入歷史 ER% 資料
 var TYPES=['rc','kpi','tl','hi'];
 var TYPE_LABELS={'rc':'Monthly Recap','kpi':'KPI Summary','tl':'Content Timeline','hi':'Campaign Highlight'};
 
@@ -688,91 +713,224 @@ function drawRC(ctx,s,posts){
   });
 }
 
-// ── CANVAS: KPI SUMMARY (照抄 Slide 1 延伸) ──
+// ── CANVAS: KPI SUMMARY ──
+// 布局：上半部左 = 數據表，右 = 走勢圖；下半部 = insight bullets
 function drawKPI(ctx,s,posts){
   var totR=posts.reduce(function(a,p){return a+p.reach;},0);
   var totE=posts.reduce(function(a,p){return a+p.eng;},0);
-  var er=totR>0?((totE/totR)*100).toFixed(1):'0';
+  var er=totR>0?((totE/totR)*100):0;
   var byP={};
   posts.forEach(function(p){if(!byP[p.platKey])byP[p.platKey]={posts:0,reach:0,eng:0};byP[p.platKey].posts++;byP[p.platKey].reach+=p.reach;byP[p.platKey].eng+=p.eng;});
+  var platC={IG:IG_C,FB:FB_C,TH:TH_C};
 
-  // Title
-  ctx.fillStyle=BLK;ctx.font=FB(py(0.28));ctx.textAlign='left';ctx.textBaseline='top';
-  ctx.fillText(s.name,px(KPI.titleX),py(KPI.titleY));
-  ctx.fillStyle=GRAY_MID;ctx.font=F(py(0.16));
-  ctx.fillText(s.d0+' ～ '+s.d1+' ｜ 共 '+posts.length+' 篇',px(KPI.titleX),py(KPI.subtitleY));
+  // ── Title ──
+  ctx.fillStyle=BLK;ctx.font=FB(py(0.26));ctx.textAlign='left';ctx.textBaseline='top';
+  ctx.fillText('KPI Summary',px(0.40),py(0.16));
+  ctx.fillStyle=GRAY_MID;ctx.font=F(py(0.14));
+  ctx.fillText(s.d0+' ～ '+s.d1+'  ｜  共 '+posts.length+' 篇',px(0.40),py(0.48));
 
-  // Divider
-  ctx.fillStyle=GRAY_LT;ctx.fillRect(px(0.50),py(1.05),CW-px(1.0),2);
-  ctx.fillStyle=BLK;ctx.fillRect(px(0.50),py(1.05),px(1.2),2);
+  // Accent line under title
+  ctx.fillStyle=BLK;ctx.fillRect(px(0.40),py(0.72),px(1.4),2);
+  ctx.fillStyle=GRAY_LT;ctx.fillRect(px(0.40)+px(1.4),py(0.72),CW-px(0.80)-px(1.4),1);
 
-  // Table header
-  var tx3=px(KPI.tableX),ty3=py(KPI.tableY),tw3=px(KPI.tableW);
-  var cols3=['平台','篇數','總觸及','總互動','互動率'];
-  var cw3=[px(1.8),px(1.6),px(2.4),px(2.4),px(2.0)];
-  var hh=py(KPI.headerH);
-  ctx.fillStyle=BLK;ctx.fillRect(tx3,ty3,tw3,hh);
-  var cx3=tx3;
-  cols3.forEach(function(col,ci){
-    ctx.fillStyle=WHT;ctx.font=FB(py(0.14));ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillText(col,cx3+cw3[ci]/2,ty3+hh/2);
-    if(ci<cols3.length-1){ctx.strokeStyle='#333';ctx.lineWidth=0.5;ctx.beginPath();ctx.moveTo(cx3+cw3[ci],ty3);ctx.lineTo(cx3+cw3[ci],ty3+hh);ctx.stroke();}
-    cx3+=cw3[ci];
+  // ── LEFT: Platform table (x: 0.40 ~ 6.20, y: 0.85 ~ 3.60) ──
+  var tX=px(0.40),tY=py(0.85),tW=px(5.80);
+  var cols=['平台','篇數','總觸及','總互動','ER%'];
+  var cWs=[px(1.40),px(0.80),px(1.30),px(1.30),px(1.00)];
+  var hH=py(0.34);
+
+  // Header row
+  ctx.fillStyle=BLK;ctx.fillRect(tX,tY,tW,hH);
+  var cx=tX;
+  cols.forEach(function(col,ci){
+    ctx.fillStyle=WHT;ctx.font=FB(py(0.13));ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(col,cx+cWs[ci]/2,tY+hH/2);
+    cx+=cWs[ci];
   });
 
-  // Data rows
-  var platKeys=Object.keys(byP);
-  var platC={IG:IG_C,FB:FB_C,TH:TH_C};
-  var rowH=py(KPI.rowH);
-  platKeys.forEach(function(pk,ri){
-    var d=byP[pk];var er2=d.reach>0?((d.eng/d.reach)*100).toFixed(1):'0';
-    var ry=ty3+hh+ri*rowH;
-    ctx.fillStyle=ri%2===0?'#FAFAFA':WHT;ctx.fillRect(tx3,ry,tw3,rowH);
-    ctx.strokeStyle=GRAY_LT;ctx.lineWidth=0.5;ctx.strokeRect(tx3,ry,tw3,rowH);
-    var rowVals=[null,String(d.posts),fmt(d.reach),fmt(d.eng),er2+'%'];
-    cx3=tx3;
-    rowVals.forEach(function(val,ci){
+  // Data rows (FB, IG only)
+  var showPlats=['FB','IG'].filter(function(pk){return byP[pk];});
+  var rH=py(0.56);
+  showPlats.forEach(function(pk,ri){
+    var d=byP[pk];
+    var er2=d.reach>0?((d.eng/d.reach)*100):0;
+    var ry=tY+hH+ri*rH;
+    ctx.fillStyle=ri%2===0?'#FAFAFA':WHT;ctx.fillRect(tX,ry,tW,rH);
+    ctx.strokeStyle=GRAY_LT;ctx.lineWidth=0.5;ctx.strokeRect(tX,ry,tW,rH);
+
+    // Target progress bar per platform
+    var hist=kpiHistory[pk]||[];
+    var prevYear=hist.filter(function(h){return String(h.month).slice(0,4)===(s.d0?String(parseInt(s.d0.slice(0,4))-1):'');});
+    var baseER=prevYear.length?prevYear.reduce(function(a,h){return a+h.er_pct;},0)/prevYear.length:null;
+    var targetER=baseER!==null?baseER*1.1:null;
+    var progress=targetER&&targetER>0?Math.min(er2/targetER,1.5):null;
+
+    cx=tX;
+    [null,String(d.posts),fmt(d.reach),fmt(d.eng),er2.toFixed(1)+'%'].forEach(function(val,ci){
       if(ci===0){
-        // Platform badge
-        ctx.fillStyle=platC[pk]||GRAY_MID;ctx.fillRect(cx3+8,ry+rowH/2-py(0.12),px(0.30),py(0.24));
-        ctx.fillStyle=WHT;ctx.font=FB(py(0.13));ctx.textAlign='center';ctx.textBaseline='middle';
-        ctx.fillText(pk,cx3+8+px(0.15),ry+rowH/2);
-        ctx.fillStyle=BLK;ctx.textAlign='left';ctx.fillText(pk==='IG'?'Instagram':pk==='FB'?'Facebook':'Threads',cx3+px(0.44),ry+rowH/2);
+        // Platform pill
+        ctx.fillStyle=platC[pk]||GRAY_MID;
+        ctx.beginPath();ctx.roundRect?ctx.roundRect(cx+8,ry+rH/2-py(0.13),px(0.28),py(0.26),3):ctx.rect(cx+8,ry+rH/2-py(0.13),px(0.28),py(0.26));ctx.fill();
+        ctx.fillStyle=WHT;ctx.font=FB(py(0.12));ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.fillText(pk,cx+8+px(0.14),ry+rH/2);
+        ctx.fillStyle=BLK;ctx.font=FB(py(0.15));ctx.textAlign='left';ctx.textBaseline='middle';
+        ctx.fillText(pk==='IG'?'Instagram':'Facebook',cx+px(0.42),ry+rH/2-py(0.06));
+        // Progress bar (目標完成度)
+        if(progress!==null){
+          var bW=cWs[0]-px(0.44)-8;
+          var bX=cx+px(0.42);var bY=ry+rH/2+py(0.08);var bH=py(0.09);
+          ctx.fillStyle='#EEEEEE';ctx.fillRect(bX,bY,bW,bH);
+          var fillW=Math.min(progress,1)*bW;
+          ctx.fillStyle=progress>=1?GREEN:er2>=targetER*0.9?'#F59E0B':RED;
+          ctx.fillRect(bX,bY,fillW,bH);
+          ctx.fillStyle=GRAY_MID;ctx.font=F(py(0.09));ctx.textAlign='left';ctx.textBaseline='top';
+          ctx.fillText('目標 '+targetER.toFixed(1)+'%  ·  達成 '+Math.round(progress*100)+'%',bX,bY+bH+2);
+        }
       } else {
-        ctx.fillStyle=BLK;ctx.font=FB(py(0.20));ctx.textAlign='center';ctx.textBaseline='middle';
-        ctx.fillText(val,cx3+cw3[ci]/2,ry+rowH/2);
+        // ER% col: highlight if above target
+        if(ci===4&&targetER&&er2>=targetER){ctx.fillStyle=GREEN;}else{ctx.fillStyle=BLK;}
+        ctx.font=FB(py(0.18));ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.fillText(val,cx+cWs[ci]/2,ry+rH/2);
       }
-      if(ci<rowVals.length-1){ctx.strokeStyle=GRAY_LT;ctx.lineWidth=0.5;ctx.beginPath();ctx.moveTo(cx3+cw3[ci],ry);ctx.lineTo(cx3+cw3[ci],ry+rowH);ctx.stroke();}
-      cx3+=cw3[ci];
+      if(ci<4){ctx.strokeStyle=GRAY_LT;ctx.lineWidth=0.5;ctx.beginPath();ctx.moveTo(cx+cWs[ci],ry);ctx.lineTo(cx+cWs[ci],ry+rH);ctx.stroke();}
+      cx+=cWs[ci];
     });
   });
 
   // Total row
-  var tRow=ty3+hh+platKeys.length*rowH;
-  ctx.fillStyle='#F0F0F0';ctx.fillRect(tx3,tRow,tw3,rowH);
-  ctx.strokeStyle=GRAY_LT;ctx.lineWidth=0.5;ctx.strokeRect(tx3,tRow,tw3,rowH);
-  var totalVals=[null,String(posts.length),fmt(totR),fmt(totE),er+'%'];
-  cx3=tx3;
-  totalVals.forEach(function(val,ci){
-    if(ci===0){ctx.fillStyle=BLK;ctx.font=FB(py(0.16));ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('Total',cx3+cw3[ci]/2,tRow+rowH/2);}
-    else{ctx.fillStyle=BLK;ctx.font=FB(py(0.20));ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(val,cx3+cw3[ci]/2,tRow+rowH/2);}
-    if(ci<totalVals.length-1){ctx.strokeStyle='#BBB';ctx.lineWidth=0.5;ctx.beginPath();ctx.moveTo(cx3+cw3[ci],tRow);ctx.lineTo(cx3+cw3[ci],tRow+rowH);ctx.stroke();}
-    cx3+=cw3[ci];
+  var tRowY=tY+hH+showPlats.length*rH;
+  ctx.fillStyle='#F0F0F0';ctx.fillRect(tX,tRowY,tW,rH);
+  ctx.strokeStyle=GRAY_LT;ctx.lineWidth=0.5;ctx.strokeRect(tX,tRowY,tW,rH);
+  cx=tX;
+  ['Total',String(posts.length),fmt(totR),fmt(totE),er.toFixed(1)+'%'].forEach(function(val,ci){
+    ctx.fillStyle=BLK;ctx.font=FB(ci===0?py(0.14):py(0.18));ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(val,cx+cWs[ci]/2,tRowY+rH/2);
+    if(ci<4){ctx.strokeStyle='#BBB';ctx.lineWidth=0.5;ctx.beginPath();ctx.moveTo(cx+cWs[ci],tRowY);ctx.lineTo(cx+cWs[ci],tRowY+rH);ctx.stroke();}
+    cx+=cWs[ci];
   });
 
-  // Insight
-  var ins=s.insight||'';var bl=ins.split('\n').filter(function(l){return l.trim();}).slice(0,5);
+  // ── RIGHT: Trend Chart (x: 6.60 ~ 12.90) ──
+  var chX=px(6.60),chY=py(0.85),chW=px(6.10),chH=py(2.80);
+  ctx.fillStyle='#FAFAFA';ctx.fillRect(chX,chY,chW,chH);
+  ctx.strokeStyle=GRAY_LT;ctx.lineWidth=0.5;ctx.strokeRect(chX,chY,chW,chH);
+
+  // Chart title
+  ctx.fillStyle=BLK;ctx.font=FB(py(0.13));ctx.textAlign='left';ctx.textBaseline='top';
+  ctx.fillText('ER% 月走勢',chX+8,chY+6);
+
+  // Legend
+  var legX=chX+chW-px(2.8);var legY=chY+6;
+  [[FB_C,'FB'],[IG_C,'IG'],['#AAA','目標 (去年 ×1.1)']].forEach(function(l,li){
+    ctx.fillStyle=li<2?l[0]:'none';
+    if(li<2){ctx.fillRect(legX+li*px(0.95),legY+2,px(0.14),py(0.10));}
+    else{ctx.setLineDash([4,3]);ctx.strokeStyle='#AAA';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(legX+li*px(0.95),legY+py(0.05));ctx.lineTo(legX+li*px(0.95)+px(0.14),legY+py(0.05));ctx.stroke();ctx.setLineDash([]);}
+    ctx.fillStyle=GRAY_DARK;ctx.font=F(py(0.10));ctx.textAlign='left';ctx.textBaseline='middle';
+    ctx.fillText(l[1],legX+li*px(0.95)+px(0.18),legY+py(0.05));
+  });
+
+  // Plot area
+  var plotX=chX+px(0.55),plotY=chY+py(0.36),plotW=chW-px(0.65),plotH=chH-py(0.50);
+  var allMonths=[];
+  var histFB=kpiHistory['FB']||[];var histIG=kpiHistory['IG']||[];
+  var allM={};
+  histFB.forEach(function(h){allM[h.month]=1;});histIG.forEach(function(h){allM[h.month]=1;});
+  allMonths=Object.keys(allM).sort().slice(-12); // last 12 months
+
+  if(allMonths.length>=2){
+    var maxER=0;
+    allMonths.forEach(function(m){
+      var fb=histFB.find(function(h){return h.month===m;});
+      var ig=histIG.find(function(h){return h.month===m;});
+      if(fb)maxER=Math.max(maxER,fb.er_pct);
+      if(ig)maxER=Math.max(maxER,ig.er_pct);
+    });
+    // include target line in scale
+    var prevYearM=allMonths.filter(function(m){return m.slice(0,4)===(allMonths[allMonths.length-1].slice(0,4)-1+'');});
+    var tgtFB=null,tgtIG=null;
+    if(prevYearM.length){
+      var pyFB=histFB.filter(function(h){return prevYearM.indexOf(h.month)>=0;});
+      var pyIG=histIG.filter(function(h){return prevYearM.indexOf(h.month)>=0;});
+      if(pyFB.length)tgtFB=pyFB.reduce(function(a,h){return a+h.er_pct;},0)/pyFB.length*1.1;
+      if(pyIG.length)tgtIG=pyIG.reduce(function(a,h){return a+h.er_pct;},0)/pyIG.length*1.1;
+      if(tgtFB)maxER=Math.max(maxER,tgtFB);
+      if(tgtIG)maxER=Math.max(maxER,tgtIG);
+    }
+    maxER=maxER*1.15||10;
+
+    // Grid lines
+    for(var g=1;g<=4;g++){
+      var gy=plotY+plotH-Math.round(g/4*plotH);
+      ctx.strokeStyle='#EEEEEE';ctx.lineWidth=0.5;ctx.beginPath();ctx.moveTo(plotX,gy);ctx.lineTo(plotX+plotW,gy);ctx.stroke();
+      ctx.fillStyle=GRAY_MID;ctx.font=F(py(0.09));ctx.textAlign='right';ctx.textBaseline='middle';
+      ctx.fillText((g/4*maxER).toFixed(1)+'%',plotX-3,gy);
+    }
+
+    // X labels
+    var step=Math.ceil(allMonths.length/8);
+    ctx.fillStyle=GRAY_MID;ctx.font=F(py(0.09));ctx.textAlign='center';ctx.textBaseline='top';
+    allMonths.forEach(function(m,mi){
+      if(mi%step===0){
+        var bx2=plotX+Math.round(mi/(allMonths.length-1)*plotW);
+        ctx.fillText(m.slice(2),bx2,plotY+plotH+3);
+      }
+    });
+
+    // Draw lines
+    function drawLine(hist,color,dash){
+      var pts=allMonths.map(function(m){return hist.find(function(h){return h.month===m;})||null;});
+      ctx.strokeStyle=color;ctx.lineWidth=1.5;
+      if(dash)ctx.setLineDash(dash);else ctx.setLineDash([]);
+      ctx.beginPath();var started=false;
+      pts.forEach(function(h,mi){
+        if(!h)return;
+        var bx2=plotX+Math.round(mi/(allMonths.length-1)*plotW);
+        var by2=plotY+plotH-Math.round((h.er_pct/maxER)*plotH);
+        if(!started){ctx.moveTo(bx2,by2);started=true;}else ctx.lineTo(bx2,by2);
+      });
+      ctx.stroke();ctx.setLineDash([]);
+      // Dots
+      pts.forEach(function(h,mi){
+        if(!h)return;
+        var bx2=plotX+Math.round(mi/(allMonths.length-1)*plotW);
+        var by2=plotY+plotH-Math.round((h.er_pct/maxER)*plotH);
+        ctx.fillStyle=color;ctx.beginPath();ctx.arc(bx2,by2,3,0,Math.PI*2);ctx.fill();
+      });
+    }
+    drawLine(histFB,FB_C,null);
+    drawLine(histIG,IG_C,null);
+
+    // Target lines (dashed)
+    if(tgtFB){
+      var tyFB=plotY+plotH-Math.round((tgtFB/maxER)*plotH);
+      ctx.strokeStyle=FB_C;ctx.lineWidth=0.8;ctx.setLineDash([5,4]);ctx.globalAlpha=0.5;
+      ctx.beginPath();ctx.moveTo(plotX,tyFB);ctx.lineTo(plotX+plotW,tyFB);ctx.stroke();
+      ctx.globalAlpha=1;ctx.setLineDash([]);
+    }
+    if(tgtIG){
+      var tyIG=plotY+plotH-Math.round((tgtIG/maxER)*plotH);
+      ctx.strokeStyle=IG_C;ctx.lineWidth=0.8;ctx.setLineDash([5,4]);ctx.globalAlpha=0.5;
+      ctx.beginPath();ctx.moveTo(plotX,tyIG);ctx.lineTo(plotX+plotW,tyIG);ctx.stroke();
+      ctx.globalAlpha=1;ctx.setLineDash([]);
+    }
+  } else {
+    // No history yet
+    ctx.fillStyle=GRAY_MID;ctx.font=F(py(0.14));ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('存入 Sheets 後自動載入走勢圖',chX+chW/2,chY+chH/2);
+  }
+
+  // ── BOTTOM: Insight bullets (y: ~3.80) ──
+  var insStartY=Math.max(tRowY+rH, py(3.80))+py(0.18);
+  var ins=s.insight||'';var bl=ins.split('\n').filter(function(l){return l.trim();}).slice(0,4);
   if(bl.length){
-    var insY=tRow+rowH+py(0.25);
-    ctx.fillStyle=BLK;ctx.fillRect(px(0.50),insY,px(0.04),py(0.22));
-    ctx.font=FB(py(0.14));ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText('觀察',px(0.60),insY+py(0.11));
-    insY+=py(0.32);
-    ctx.font=F(py(0.14));
+    ctx.fillStyle=BLK;ctx.fillRect(px(0.40),insStartY,3,py(0.22));
+    ctx.font=FB(py(0.14));ctx.textAlign='left';ctx.textBaseline='middle';
+    ctx.fillText('觀察與建議',px(0.50),insStartY+py(0.11));
+    insStartY+=py(0.32);
     bl.forEach(function(line){
-      ctx.fillStyle=BLK;ctx.beginPath();ctx.arc(px(0.56),insY+py(0.08),py(0.03),0,Math.PI*2);ctx.fill();
-      ctx.fillStyle=GRAY_DARK;ctx.textAlign='left';ctx.textBaseline='top';
-      wt(ctx,line.replace(/^[●•\-\s]+/,''),px(0.64),insY,CW-px(1.10),py(0.18),2);
-      insY+=py(0.22);
+      ctx.fillStyle='#7591A8';ctx.beginPath();ctx.arc(px(0.46),insStartY+py(0.08),py(0.035),0,Math.PI*2);ctx.fill();
+      ctx.fillStyle=GRAY_DARK;ctx.font=F(py(0.14));ctx.textAlign='left';ctx.textBaseline='top';
+      wt(ctx,line.replace(/^[●•\-\s]+/,''),px(0.56),insStartY,CW-px(0.96),py(0.18),2);
+      insStartY+=py(0.26);
     });
   }
 }
@@ -966,6 +1124,26 @@ function drawHI(ctx,s,posts){
 // ── PPTX Export ──
 // ── 存入 Google Sheets ──
 var SHEETS_URL = 'https://script.google.com/macros/s/AKfycbyDxdq-laqVmyF-4BphzebY5keoSLa81fY0v-J3P1wkOpJVrILWhn-QAAcnWUnoZrD3OA/exec';
+
+// 頁面載入時從 Sheets 拉歷史資料
+function loadHistory(){
+  fetch(SHEETS_URL+'?action=getHistory')
+  .then(function(r){return r.json();})
+  .then(function(data){
+    if(data.status==='ok'&&data.rows&&data.rows.length){
+      kpiHistory={'FB':[],'IG':[]};
+      data.rows.forEach(function(row){
+        var pk=(row.platform||'').toUpperCase();
+        if(pk==='FB'||pk==='IG'){
+          kpiHistory[pk].push({month:String(row.month),er_pct:parseFloat(row.er_pct)||0,reach:Number(row.reach)||0,engagements:Number(row.engagements)||0});
+        }
+      });
+      if(slides.some(function(s){return s.type==='kpi';})){renderAll();}
+    }
+  })
+  .catch(function(){});
+}
+loadHistory();
 
 document.getElementById('btn-save').addEventListener('click', function() {
   if (!allPosts.length) return;
@@ -1276,6 +1454,98 @@ function pptHI(pres,s,posts){
   });
 }
 
+
+// ── PDF 月報分析 ──
+var pdfBase64 = null;
+var pdfMode = 'insight';
+
+function setPdfMode(mode) {
+  pdfMode = mode;
+  document.getElementById('mode-insight').className = 'mode-pill' + (mode === 'insight' ? ' active' : '');
+  document.getElementById('mode-full').className = 'mode-pill' + (mode === 'full' ? ' active' : '');
+}
+
+document.getElementById('pdf-input').addEventListener('change', function() {
+  var file = this.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    pdfBase64 = e.target.result.split(',')[1];
+    var drop = document.getElementById('pdf-drop');
+    drop.classList.add('ok');
+    document.getElementById('pdf-drop-txt').textContent = '✓ ' + file.name.replace('.pdf','');
+    document.getElementById('pdf-analyze-btn').disabled = false;
+  };
+  reader.readAsDataURL(file);
+});
+
+// drag support on pdf-drop
+(function(){
+  var pd = document.getElementById('pdf-drop');
+  pd.addEventListener('dragover', function(e){e.preventDefault(); pd.style.borderColor='#7591A8';});
+  pd.addEventListener('dragleave', function(){pd.style.borderColor='';});
+  pd.addEventListener('drop', function(e){
+    e.preventDefault(); pd.style.borderColor='';
+    var f = e.dataTransfer.files[0];
+    if(f && f.name.endsWith('.pdf')){
+      document.getElementById('pdf-input').files; // can't assign, trigger via reader
+      var reader = new FileReader();
+      reader.onload = function(ev){
+        pdfBase64 = ev.target.result.split(',')[1];
+        pd.classList.add('ok');
+        document.getElementById('pdf-drop-txt').textContent = '✓ ' + f.name.replace('.pdf','');
+        document.getElementById('pdf-analyze-btn').disabled = false;
+      };
+      reader.readAsDataURL(f);
+    }
+  });
+})();
+
+function analyzePdf() {
+  if (!pdfBase64) return;
+  var btn = document.getElementById('pdf-analyze-btn');
+  var spinRow = document.getElementById('pdf-spin-row');
+  btn.disabled = true;
+  spinRow.classList.add('show');
+
+  var modePrompt = pdfMode === 'insight'
+    ? '請產出「洞察摘要」：3 條關鍵洞察，每條格式：\n• 觀察：[數據現象] → 建議：[具體行動]\n\n最後加「下月策略方向」2-3 行。\n每條不超過 50 字，直接輸出不需前言。'
+    : '請產出完整月報文字，使用以下結構：\n\n## 社群成效月報\n\n### 整體表現\n（FB / IG 核心指標表格 + MOM 比較 + 一句話結論）\n\n### 本月亮點\n（最強內容與原因）\n\n### 待改善方向\n（偏弱內容，數字支撐）\n\n### 下月內容策略建議\n（3 條，觀察 → 建議）\n\n### 備注\n（數據缺口或特殊說明）';
+
+  fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      system: '你是 Garmin Taiwan 社群編輯的分析助理。年度 KPI 以互動（Engagement）為優先，目標 ER% 趨近 4%。語言：文字繁體中文，指標英文（ER%, MOM, Impressions, Engagements）。語氣簡潔直接，每個論點要有數字支撐，不寫空話。',
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: pdfBase64 } },
+          { type: 'text', text: modePrompt }
+        ]
+      }]
+    })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data) {
+    var text = (data.content || []).filter(function(b){return b.type==='text';}).map(function(b){return b.text;}).join('');
+    if (!text) text = '無法取得分析結果，請重試。';
+    document.getElementById('insight-txt').value = text;
+    spinRow.classList.remove('show');
+    btn.disabled = false;
+    // flash the textarea
+    var ta = document.getElementById('insight-txt');
+    ta.style.borderColor = '#7591A8';
+    setTimeout(function(){ ta.style.borderColor = ''; }, 1500);
+  })
+  .catch(function(err) {
+    document.getElementById('insight-txt').value = '錯誤：' + err.message;
+    spinRow.classList.remove('show');
+    btn.disabled = false;
+  });
+}
 
 }); // DOMContentLoaded
 </script>
