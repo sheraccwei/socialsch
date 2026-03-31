@@ -93,16 +93,31 @@ html,body{height:100%;overflow:hidden;font-family:'Noto Sans TC',sans-serif;font
 .save-btn:disabled{opacity:.3;cursor:not-allowed}
 .save-ok{font-size:10px;color:#16A34A;font-weight:600;display:none;margin-left:6px}
 .save-ok.show{display:inline}
-.pdf-drop{border:1.5px dashed #C5D4DF;border-radius:4px;padding:9px 8px;text-align:center;cursor:pointer;background:#F4F8FA;transition:all .15s;font-size:10px;color:#7591A8;font-weight:600}
-.pdf-drop:hover{border-color:#7591A8;background:#EAF0F5}
-.pdf-drop.ok{border-color:#7591A8;border-style:solid;background:#EAF0F5;color:#4a6f87}
-.mode-pill{flex:1;padding:4px 6px;border:1px solid #D0DCE4;border-radius:20px;font-size:9.5px;font-weight:600;cursor:pointer;font-family:inherit;background:#fff;color:#AAA;transition:all .12s}
-.mode-pill.active{background:#7591A8;border-color:#7591A8;color:#fff}
-.pdf-analyze-btn{width:100%;margin-top:5px;padding:7px;background:#7591A8;color:#fff;border:none;border-radius:3px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s}
-.pdf-analyze-btn:hover:not(:disabled){background:#5f7a8f}
-.pdf-analyze-btn:disabled{opacity:.35;cursor:not-allowed}
-.pdf-spin-row{display:none;align-items:center;gap:6px;font-size:10px;color:#7591A8;margin-top:5px}
-.pdf-spin-row.show{display:flex}
+.pdf-modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;align-items:center;justify-content:center}
+.pdf-modal-backdrop.show{display:flex}
+.pdf-modal{background:#fff;border-radius:6px;width:560px;max-width:94vw;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.18)}
+.pdf-modal-hdr{padding:14px 18px;border-bottom:1px solid #F0F0F0;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.pdf-modal-title{font-size:13px;font-weight:700;flex:1;color:#111}
+.pdf-modal-close{font-size:18px;color:#AAA;cursor:pointer;background:none;border:none;padding:0 2px;line-height:1}
+.pdf-modal-close:hover{color:#333}
+.pdf-modal-body{padding:16px 18px;overflow-y:auto;flex:1}
+.pdf-modal-footer{padding:12px 18px;border-top:1px solid #F0F0F0;display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap}
+.pdf-result-box{background:#F8F9FA;border:1px solid #E8E8E8;border-radius:4px;padding:12px;font-size:11px;line-height:1.75;color:#333;white-space:pre-wrap;min-height:80px;max-height:280px;overflow-y:auto;margin-top:8px}
+.pdf-mode-row{display:flex;gap:6px;margin-bottom:10px}
+.pdf-mpill{flex:1;padding:5px 8px;border:1px solid #DDD;border-radius:20px;font-size:10px;font-weight:600;cursor:pointer;font-family:inherit;background:#fff;color:#AAA;transition:all .12s;text-align:center}
+.pdf-mpill.active{background:#7591A8;border-color:#7591A8;color:#fff}
+.pdf-upload-zone{border:1.5px dashed #C5D4DF;border-radius:4px;padding:12px;text-align:center;cursor:pointer;background:#F4F8FA;font-size:11px;color:#7591A8;font-weight:600;transition:all .15s}
+.pdf-upload-zone:hover,.pdf-upload-zone.drag{border-color:#7591A8;background:#EAF0F5}
+.pdf-upload-zone.ok{border-color:#7591A8;border-style:solid;background:#EAF0F5;color:#4a6f87}
+.pdf-go-btn{padding:7px 16px;background:#7591A8;color:#fff;border:none;border-radius:3px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s}
+.pdf-go-btn:hover:not(:disabled){background:#5f7a8f}
+.pdf-go-btn:disabled{opacity:.35;cursor:not-allowed}
+.pdf-apply-btn{padding:7px 14px;background:#000;color:#fff;border:none;border-radius:3px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s}
+.pdf-apply-btn:hover:not(:disabled){background:#333}
+.pdf-apply-btn:disabled{opacity:.35;cursor:not-allowed}
+.pdf-slide-sel{padding:5px 8px;border:1px solid #DDD;border-radius:3px;font-size:11px;font-family:inherit;flex:1}
+.pdf-hbtn{padding:6px 12px;border-radius:3px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;border:1px solid #555;background:transparent;color:#bbb;transition:all .15s}
+.pdf-hbtn:hover{border-color:#888;color:#fff}
 </style>
 </head>
 <body>
@@ -115,6 +130,8 @@ html,body{height:100%;overflow:hidden;font-family:'Noto Sans TC',sans-serif;font
     <button class="hbtn" id="btn-preview" disabled>重新產生預覽</button>
     <button class="save-btn" id="btn-save" disabled>↑ 存入 Sheets</button>
     <span class="save-ok" id="save-ok">✓ 已儲存</span>
+    <div class="hdr-sep"></div>
+    <button class="pdf-hbtn" id="btn-pdf-open">📄 PDF 分析</button>
     <button class="hbtn pri" id="btn-export" disabled>↓ 下載 PPTX</button>
   </div>
 </div>
@@ -171,22 +188,8 @@ html,body{height:100%;overflow:hidden;font-family:'Noto Sans TC',sans-serif;font
         <button class="tbtn" id="t-hi">Campaign Highlight</button>
       </div>
       <div class="slbl" style="margin-bottom:4px">觀察摘要</div>
-
-      <div id="pdf-section" style="margin-bottom:8px">
-        <div class="pdf-drop" id="pdf-drop" onclick="document.getElementById('pdf-input').click()">
-          <span id="pdf-drop-txt">📄 上傳月報 PDF，AI 自動分析</span>
-        </div>
-        <input type="file" id="pdf-input" accept=".pdf" style="display:none">
-        <div style="display:flex;gap:4px;margin-top:5px">
-          <button class="mode-pill active" id="mode-insight" onclick="setPdfMode('insight')">洞察摘要</button>
-          <button class="mode-pill" id="mode-full" onclick="setPdfMode('full')">完整月報</button>
-        </div>
-        <button class="pdf-analyze-btn" id="pdf-analyze-btn" disabled onclick="analyzePdf()">AI 分析 PDF →</button>
-        <div class="pdf-spin-row" id="pdf-spin-row"><div class="spin"></div><span>分析中，請稍候…</span></div>
-      </div>
-
-      <button class="ai-btn" id="ai-btn" disabled>📋 複製 AI 分析提示詞</button>
-      <div class="ai-copied" id="ai-copied">✓ 已複製！貼到 Claude 對話框取得分析</div>
+      <button class="ai-btn" id="ai-btn" disabled>📋 複製 CSV 分析提示詞</button>
+      <div class="ai-copied" id="ai-copied">✓ 已複製！貼到 Claude 取得分析，再貼回下方</div>
       <div class="fld" style="margin-bottom:0">
         <textarea id="insight-txt" placeholder="貼入 AI 分析結果，或手動填寫觀察與建議..."></textarea>
       </div>
@@ -1455,103 +1458,188 @@ function pptHI(pres,s,posts){
 }
 
 
-// ── PDF 月報分析 ──
-var pdfBase64 = null;
-var pdfMode = 'insight';
+// ── PDF 分析 Modal ──
+var pdfFileName = null;
+var pdfModalMode = 'insight';
 
-function setPdfMode(mode) {
-  pdfMode = mode;
-  document.getElementById('mode-insight').className = 'mode-pill' + (mode === 'insight' ? ' active' : '');
-  document.getElementById('mode-full').className = 'mode-pill' + (mode === 'full' ? ' active' : '');
-}
-
-// Fix: also wire up mode pills via addEventListener (belt + suspenders)
-document.getElementById('mode-insight').addEventListener('click', function(){ setPdfMode('insight'); });
-document.getElementById('mode-full').addEventListener('click', function(){ setPdfMode('full'); });
-
-document.getElementById('pdf-input').addEventListener('change', function() {
-  var file = this.files[0];
-  if (!file) return;
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    pdfBase64 = e.target.result.split(',')[1];
-    var drop = document.getElementById('pdf-drop');
-    drop.classList.add('ok');
-    document.getElementById('pdf-drop-txt').textContent = '✓ ' + file.name.replace('.pdf','');
-    document.getElementById('pdf-analyze-btn').disabled = false;
-  };
-  reader.readAsDataURL(file);
+// Open / close
+document.getElementById('btn-pdf-open').addEventListener('click', function(){
+  // Populate slide selector
+  var sel = document.getElementById('pdf-slide-sel');
+  sel.innerHTML = '<option value="">選擇套用到哪個 Slide…</option>';
+  slides.forEach(function(s){
+    var opt = document.createElement('option');
+    opt.value = s.id;
+    opt.textContent = 'Slide ' + s.num + ' — ' + s.name;
+    sel.appendChild(opt);
+  });
+  document.getElementById('pdf-backdrop').classList.add('show');
+});
+document.getElementById('pdf-modal-close').addEventListener('click', function(){
+  document.getElementById('pdf-backdrop').classList.remove('show');
+});
+document.getElementById('pdf-backdrop').addEventListener('click', function(e){
+  if(e.target===this) this.classList.remove('show');
 });
 
-// drag support on pdf-drop
-(function(){
-  var pd = document.getElementById('pdf-drop');
-  pd.addEventListener('dragover', function(e){e.preventDefault(); pd.style.borderColor='#7591A8';});
-  pd.addEventListener('dragleave', function(){pd.style.borderColor='';});
-  pd.addEventListener('drop', function(e){
-    e.preventDefault(); pd.style.borderColor='';
-    var f = e.dataTransfer.files[0];
-    if(f && f.name.endsWith('.pdf')){
-      document.getElementById('pdf-input').files; // can't assign, trigger via reader
-      var reader = new FileReader();
-      reader.onload = function(ev){
-        pdfBase64 = ev.target.result.split(',')[1];
-        pd.classList.add('ok');
-        document.getElementById('pdf-drop-txt').textContent = '✓ ' + f.name.replace('.pdf','');
-        document.getElementById('pdf-analyze-btn').disabled = false;
-      };
-      reader.readAsDataURL(f);
-    }
-  });
-})();
+// Mode pills
+document.getElementById('pmode-insight').addEventListener('click', function(){
+  pdfModalMode='insight';
+  this.className='pdf-mpill active';
+  document.getElementById('pmode-full').className='pdf-mpill';
+});
+document.getElementById('pmode-full').addEventListener('click', function(){
+  pdfModalMode='full';
+  this.className='pdf-mpill active';
+  document.getElementById('pmode-insight').className='pdf-mpill';
+});
 
-function analyzePdf() {
-  if (!pdfBase64) return;
-  var btn = document.getElementById('pdf-analyze-btn');
-  var spinRow = document.getElementById('pdf-spin-row');
-  btn.disabled = true;
-  spinRow.classList.add('show');
+// Upload zone
+document.getElementById('pdf-upload-zone').addEventListener('click', function(){
+  document.getElementById('pdf-input').click();
+});
+document.getElementById('pdf-upload-zone').addEventListener('dragover', function(e){
+  e.preventDefault(); this.classList.add('drag');
+});
+document.getElementById('pdf-upload-zone').addEventListener('dragleave', function(){
+  this.classList.remove('drag');
+});
+document.getElementById('pdf-upload-zone').addEventListener('drop', function(e){
+  e.preventDefault(); this.classList.remove('drag');
+  var f = e.dataTransfer.files[0];
+  if(f && f.name.endsWith('.pdf')) loadPdfFile(f);
+});
+document.getElementById('pdf-input').addEventListener('change', function(){
+  if(this.files[0]) loadPdfFile(this.files[0]);
+});
 
-  var modePrompt = pdfMode === 'insight'
-    ? '請產出「洞察摘要」：3 條關鍵洞察，每條格式：\n• 觀察：[數據現象] → 建議：[具體行動]\n\n最後加「下月策略方向」2-3 行。\n每條不超過 50 字，直接輸出不需前言。'
-    : '請產出完整月報文字，使用以下結構：\n\n## 社群成效月報\n\n### 整體表現\n（FB / IG 核心指標表格 + MOM 比較 + 一句話結論）\n\n### 本月亮點\n（最強內容與原因）\n\n### 待改善方向\n（偏弱內容，數字支撐）\n\n### 下月內容策略建議\n（3 條，觀察 → 建議）\n\n### 備注\n（數據缺口或特殊說明）';
-
-  fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1000,
-      system: '你是 Garmin Taiwan 社群編輯的分析助理。年度 KPI 以互動（Engagement）為優先，目標 ER% 趨近 4%。語言：文字繁體中文，指標英文（ER%, MOM, Impressions, Engagements）。語氣簡潔直接，每個論點要有數字支撐，不寫空話。',
-      messages: [{
-        role: 'user',
-        content: [
-          { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: pdfBase64 } },
-          { type: 'text', text: modePrompt }
-        ]
-      }]
-    })
-  })
-  .then(function(r){ return r.json(); })
-  .then(function(data) {
-    var text = (data.content || []).filter(function(b){return b.type==='text';}).map(function(b){return b.text;}).join('');
-    if (!text) text = '無法取得分析結果，請重試。';
-    document.getElementById('insight-txt').value = text;
-    spinRow.classList.remove('show');
-    btn.disabled = false;
-    // flash the textarea
-    var ta = document.getElementById('insight-txt');
-    ta.style.borderColor = '#7591A8';
-    setTimeout(function(){ ta.style.borderColor = ''; }, 1500);
-  })
-  .catch(function(err) {
-    document.getElementById('insight-txt').value = '錯誤：' + err.message;
-    spinRow.classList.remove('show');
-    btn.disabled = false;
-  });
+function loadPdfFile(file) {
+  pdfFileName = file.name.replace('.pdf','');
+  var zone = document.getElementById('pdf-upload-zone');
+  zone.classList.add('ok');
+  document.getElementById('pdf-upload-txt').textContent = '✓ ' + pdfFileName;
+  document.getElementById('pdf-gen-prompt').disabled = false;
 }
+
+// Generate prompt
+document.getElementById('pdf-gen-prompt').addEventListener('click', function(){
+  var isInsight = pdfModalMode === 'insight';
+  var modeDesc = isInsight
+    ? '請產出「洞察摘要」：3 條關鍵洞察，每條格式：
+• 觀察：[數據現象] → 建議：[具體行動]
+
+最後加「下月策略方向」2-3 行。每條不超過 50 字，直接輸出不需前言。'
+    : '請產出完整月報文字，使用以下結構：
+
+## 社群成效月報
+
+### 整體表現
+（FB / IG 核心指標 + MOM 比較 + 一句話結論）
+
+### 本月亮點
+（最強內容與原因）
+
+### 待改善方向
+（偏弱內容，數字支撐）
+
+### 下月內容策略建議
+（3 條，格式：觀察 → 建議）
+
+### 備注
+（數據缺口或特殊說明）';
+
+  var prompt = '你是 Garmin Taiwan 社群編輯的分析助理。
+年度 KPI 以互動（Engagement）為優先，目標 ER% 趨近 4%。
+語言：文字繁體中文，數據指標英文（ER%, MOM, Impressions, Engagements）。
+語氣簡潔直接，每個論點要有數字支撐，不寫空話。
+
+'
+    + '以下是我上傳的 Sprinklr 月報（' + (pdfFileName||'PDF') + '），請根據報告內容：
+
+'
+    + modeDesc;
+
+  document.getElementById('pdf-prompt-txt').value = prompt;
+  document.getElementById('pdf-prompt-area').style.display = 'block';
+  document.getElementById('pdf-result-txt').addEventListener('input', function(){
+    document.getElementById('pdf-apply-btn').disabled = this.value.trim().length === 0;
+  });
+});
+
+// Copy prompt
+document.getElementById('pdf-copy-prompt').addEventListener('click', function(){
+  var txt = document.getElementById('pdf-prompt-txt').value;
+  navigator.clipboard.writeText(txt).then(function(){
+    document.getElementById('pdf-copy-prompt').textContent = '✓ 已複製';
+    setTimeout(function(){ document.getElementById('pdf-copy-prompt').textContent = '複製'; }, 2000);
+  }).catch(function(){
+    document.getElementById('pdf-prompt-txt').select();
+    document.execCommand('copy');
+  });
+});
+
+// Apply to slide
+document.getElementById('pdf-apply-btn').addEventListener('click', function(){
+  var sid = document.getElementById('pdf-slide-sel').value;
+  var txt = document.getElementById('pdf-result-txt').value.trim();
+  if(!sid || !txt){ alert('請選擇 Slide 並確認已貼入分析結果'); return; }
+  var s = slides.find(function(x){ return x.id === sid; });
+  if(!s) return;
+  s.insight = txt;
+  // if this slide is currently active, update the textarea too
+  if(activeId === sid) document.getElementById('insight-txt').value = txt;
+  renderMgr(); renderAll();
+  document.getElementById('pdf-backdrop').classList.remove('show');
+  // flash the slide card
+  var ok = document.getElementById('save-ok');
+  ok.textContent = '✓ 已套用到 ' + s.name;
+  ok.classList.add('show');
+  setTimeout(function(){ ok.classList.remove('show'); ok.textContent='✓ 已儲存'; }, 3000);
+});
+
+// Slide selector enables apply btn when result also filled
+document.getElementById('pdf-slide-sel').addEventListener('change', function(){
+  var hasTxt = document.getElementById('pdf-result-txt').value.trim().length > 0;
+  document.getElementById('pdf-apply-btn').disabled = !(this.value && hasTxt);
+});
 
 }); // DOMContentLoaded
 </script>
+
+<!-- PDF 分析 Modal -->
+<div class="pdf-modal-backdrop" id="pdf-backdrop">
+  <div class="pdf-modal">
+    <div class="pdf-modal-hdr">
+      <span class="pdf-modal-title">📄 PDF 月報分析</span>
+      <button class="pdf-modal-close" id="pdf-modal-close">×</button>
+    </div>
+    <div class="pdf-modal-body">
+      <div class="pdf-mode-row">
+        <button class="pdf-mpill active" id="pmode-insight">洞察摘要（2-3 條）</button>
+        <button class="pdf-mpill" id="pmode-full">完整月報文字</button>
+      </div>
+      <div class="pdf-upload-zone" id="pdf-upload-zone">
+        <span id="pdf-upload-txt">點擊或拖曳上傳 Sprinklr PDF 報告</span>
+      </div>
+      <input type="file" id="pdf-input" accept=".pdf" style="display:none">
+      <div id="pdf-prompt-area" style="display:none;margin-top:12px">
+        <div style="font-size:10px;color:#888;margin-bottom:5px">複製以下提示詞 → 貼到 Claude 對話框 → 把回覆貼回下方</div>
+        <div style="position:relative">
+          <textarea id="pdf-prompt-txt" readonly style="width:100%;height:110px;font-size:10px;color:#444;border:1px solid #E0E0E0;border-radius:3px;padding:8px;resize:none;font-family:monospace;line-height:1.6;background:#FAFAFA"></textarea>
+          <button id="pdf-copy-prompt" style="position:absolute;top:6px;right:6px;padding:3px 9px;font-size:10px;font-weight:700;border:1px solid #7591A8;border-radius:3px;background:#fff;color:#7591A8;cursor:pointer;font-family:inherit">複製</button>
+        </div>
+        <div style="font-size:10px;color:#888;margin-top:10px;margin-bottom:5px">貼入 AI 回覆：</div>
+        <textarea id="pdf-result-txt" placeholder="把 Claude 的分析貼在這裡..." style="width:100%;height:130px;font-size:11px;border:1px solid #E0E0E0;border-radius:3px;padding:8px;resize:vertical;font-family:inherit;line-height:1.7;color:#222"></textarea>
+      </div>
+    </div>
+    <div class="pdf-modal-footer">
+      <select class="pdf-slide-sel" id="pdf-slide-sel">
+        <option value="">選擇套用到哪個 Slide…</option>
+      </select>
+      <button class="pdf-apply-btn" id="pdf-apply-btn" disabled>套用到 Slide</button>
+      <button class="pdf-go-btn" id="pdf-gen-prompt" disabled>產生提示詞</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
