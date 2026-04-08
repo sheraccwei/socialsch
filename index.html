@@ -222,6 +222,7 @@ textarea.minp{min-height:48px;resize:vertical;}
 .modal-meta{font-size:.6rem;color:var(--ink3);}
 .modal-meta span{color:var(--acc);}
 .btn-modal-del{background:var(--red-bg);border:1px solid #e0a0a0;color:var(--red);border-radius:5px;padding:4px 10px;font-size:.72rem;cursor:pointer;font-family:inherit;}
+.btn-modal-done{background:var(--green-bg);border:1px solid #a0d0b0;color:var(--green);border-radius:5px;padding:4px 14px;font-size:.72rem;cursor:pointer;font-family:inherit;font-weight:700;}
 
 /* TOAST */
 .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(8px);background:var(--ink);color:#fff;padding:8px 16px;border-radius:7px;font-size:.75rem;opacity:0;transition:opacity .18s,transform .18s;pointer-events:none;z-index:9999;white-space:nowrap;}
@@ -589,7 +590,10 @@ function showDetail(id){
       </div></div>
       <div class="modal-footer">
         <div class="modal-meta">建立 ${shortDT(s.createdAt)}／更新 <span>${shortDT(s.updatedAt)}</span></div>
-        <button class="btn-modal-del" onclick="del('${s.id}')">🗑 刪除</button>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-modal-del" onclick="del('${s.id}')">刪除</button>
+          <button class="btn-modal-done" onclick="closeModal()">完成</button>
+        </div>
       </div>
     </div>
   </div>`;
