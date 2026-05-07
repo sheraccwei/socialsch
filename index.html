@@ -235,6 +235,13 @@ textarea.minp{min-height:48px;resize:vertical;}
 .btn-modal-del{background:var(--red-bg);border:1px solid #e0a0a0;color:var(--red);border-radius:5px;padding:4px 10px;font-size:.72rem;cursor:pointer;font-family:inherit;}
 .btn-modal-done{background:var(--green-bg);border:1px solid #a0d0b0;color:var(--green);border-radius:5px;padding:4px 14px;font-size:.72rem;cursor:pointer;font-family:inherit;font-weight:700;}
 
+/* HEADER ANNOUNCE POPUP */
+.hdr-announce-btn{background:none;border:none;color:rgba(255,255,255,.55);cursor:pointer;padding:4px 8px;border-radius:6px;font-size:.75rem;display:flex;align-items:center;gap:5px;transition:background .13s;position:relative;}
+.hdr-announce-btn:hover{background:rgba(255,255,255,.1);color:#fff;}
+.hdr-announce-btn .badge-new{position:absolute;top:1px;right:2px;width:7px;height:7px;border-radius:50%;background:var(--acc);border:1.5px solid var(--ink);}
+.announce-popup{display:none;position:absolute;top:calc(100% + 8px);right:0;width:340px;background:var(--surf);border:1.5px solid var(--bdr);border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.15);z-index:200;padding:14px 16px;}
+.announce-popup.open{display:block;}
+.announce-popup-title{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--acc);margin-bottom:10px;}
 /* USERNAME PROMPT OVERLAY */
 .name-overlay{position:fixed;inset:0;background:rgba(26,24,20,.55);z-index:600;display:flex;align-items:center;justify-content:center;}
 .name-overlay.hidden{display:none;}
@@ -296,6 +303,27 @@ textarea.minp{min-height:48px;resize:vertical;}
   <div class="hdr-r">
     <div style="display:flex;align-items:center;gap:5px;"><div class="sdot" id="sdot"></div><div class="stxt" id="stxt">—</div></div>
     <div class="total-pill" id="total-pill">0 筆</div>
+    <div style="position:relative;">
+      <button class="hdr-announce-btn" onclick="toggleAnnouncePopup(event)" title="更新公告">
+        🔔 更新公告
+        <span class="badge-new" id="announce-new-dot"></span>
+      </button>
+      <div class="announce-popup" id="announce-popup">
+        <div class="announce-popup-title">更新公告</div>
+        <div class="announce-item">
+          <div class="announce-dot"></div>
+          <div><strong>2026/05</strong><span class="announce-new">最新</span><br>協作標記（紫色）、拖曳移動排程、使用者名稱記錄、公告欄、排程預設顯示當月起</div>
+        </div>
+        <div class="announce-item">
+          <div class="announce-dot" style="background:var(--ink3)"></div>
+          <div><strong>2026/04</strong><br>點日期快速新增、細項視窗編輯、GarminTW 藍底 / GRC 紅底區分</div>
+        </div>
+        <div class="announce-item">
+          <div class="announce-dot" style="background:var(--ink3)"></div>
+          <div><strong>2026/03</strong><br>工具上線：Google Sheets 即時同步、多平台複選、狀態管理、密碼保護</div>
+        </div>
+      </div>
+    </div>
     <div class="user-name-chip" id="user-name-chip"><span id="user-name-display">—</span></div>
   </div>
 </header>
@@ -327,6 +355,9 @@ textarea.minp{min-height:48px;resize:vertical;}
               <label class="plat-btn" id="pb-tk"><input type="checkbox" value="tk" onchange="syncPlatBtn(this)">TikTok</label>
             </div>
           </div>
+          <div style="margin-left:auto;padding-left:6px;">
+            <span class="collab-toggle" id="collab-toggle" onclick="toggleCollab()">協作</span>
+          </div>
         </div>
       </div>
       <div class="row c2">
@@ -339,9 +370,6 @@ textarea.minp{min-height:48px;resize:vertical;}
           </select>
         </div>
       </div>
-      <div style="margin-bottom:7px;">
-        <span class="collab-toggle" id="collab-toggle" onclick="toggleCollab()">協作貼文</span>
-      </div>
       <div class="note-row" id="add-note-row">
         <div class="f" style="margin-bottom:7px;"><label>📝 備註</label><textarea id="i-note" rows="2" placeholder="說明此排程狀況…"></textarea></div>
       </div>
@@ -350,7 +378,10 @@ textarea.minp{min-height:48px;resize:vertical;}
 
     <div class="filter-bar">
       <span class="flabel">篩選</span>
-      <select id="f-month" onchange="renderTable()"><option value="">所有月份</option></select>
+      <select id="f-month" onchange="renderTable()">
+        <option value="">當月起</option>
+        <option value="all">所有月份</option>
+      </select>
       <select id="f-acct" onchange="renderTable()">
         <option value="">所有帳號</option><option value="GarminTW">GarminTW</option><option value="GRC">GRC</option>
       </select>
@@ -372,27 +403,6 @@ textarea.minp{min-height:48px;resize:vertical;}
 
   <!-- RIGHT: CALENDAR -->
   <div class="right">
-    <!-- ANNOUNCEMENT BANNER -->
-    <div class="announce" id="announce-wrap">
-      <div class="announce-header">
-        <div class="announce-title">📢 更新公告</div>
-        <div class="announce-toggle" id="announce-toggle" onclick="toggleAnnounce()">展開 ▾</div>
-      </div>
-      <div class="announce-body" id="announce-body">
-        <div class="announce-item">
-          <div class="announce-dot"></div>
-          <div><strong>2026/05</strong><span class="announce-new">最新</span><br>新增協作貼文標記（紫色）、拖曳移動排程、排程列表橫向捲軸、本週提醒時間調整</div>
-        </div>
-        <div class="announce-item">
-          <div class="announce-dot" style="background:var(--ink3)"></div>
-          <div><strong>2026/04</strong><br>新增點擊日期快速新增、細項視窗可直接編輯、GarminTW 藍底 / GRC 紅底區分</div>
-        </div>
-        <div class="announce-item">
-          <div class="announce-dot" style="background:var(--ink3)"></div>
-          <div><strong>2026/03</strong><br>工具上線：Google Sheets 即時同步、多平台複選、狀態管理、密碼保護</div>
-        </div>
-      </div>
-    </div>
     <div class="cal-acct-bar">
       <div class="cap all on" id="cp-all" onclick="setCalAcct('all')">全部 <span class="cap-cnt" id="cn-all"></span></div>
       <div class="cap garmin" id="cp-garmin" onclick="setCalAcct('GarminTW')"><div class="cap-dot"></div>GarminTW <span class="cap-cnt" id="cn-garmin"></span></div>
@@ -459,12 +469,17 @@ function saveName(){
   document.getElementById('user-name-display').textContent=v;
 }
 
-function toggleAnnounce(){
-  const body=document.getElementById('announce-body');
-  const tog=document.getElementById('announce-toggle');
-  const open=body.classList.toggle('open');
-  tog.textContent=open?'收起 ▴':'展開 ▾';
+function toggleAnnouncePopup(e){
+  e.stopPropagation();
+  const popup=document.getElementById('announce-popup');
+  popup.classList.toggle('open');
+  // hide new dot after viewing
+  document.getElementById('announce-new-dot').style.display='none';
+  localStorage.setItem('sch_announce_seen','2026-05');
 }
+document.addEventListener('click',()=>{
+  document.getElementById('announce-popup')?.classList.remove('open');
+});
 function toggleCollab(){
   addIsCollab=!addIsCollab;
   document.getElementById('collab-toggle').classList.toggle('on',addIsCollab);
@@ -755,11 +770,14 @@ function getFiltered(){
   const fm=document.getElementById('f-month').value;
   const fa=document.getElementById('f-acct').value;
   const fs=document.getElementById('f-status').value;
-  return data.filter(s=>
-    (!fm||s.date.startsWith(fm))&&
-    (!fa||s.acct===fa)&&
-    (!fs||s.status===fs)
-  );
+  // Default: show current month onwards; 'all' shows everything
+  const now=new Date();
+  const curMonthPfx=now.getFullYear()+'-'+pad(now.getMonth()+1);
+  return data.filter(s=>{
+    if(fm==='all') return (!fa||s.acct===fa)&&(!fs||s.status===fs);
+    const monthOk=fm?s.date.startsWith(fm):(s.date>=curMonthPfx+'-01');
+    return monthOk&&(!fa||s.acct===fa)&&(!fs||s.status===fs);
+  });
 }
 
 function renderTable(){
@@ -826,11 +844,17 @@ function renderCal(){
   // Stats — count by platform key (each entry in comma-separated plat)
   const platCnt={};
   filtered.forEach(s=>platKeys(s.plat).forEach(k=>{ platCnt[k]=(platCnt[k]||0)+1; }));
+  const collabCnt=filtered.filter(s=>s.collab==='1').length;
+  const ownCnt=filtered.length-collabCnt;
   const statsHtml=Object.entries(platCnt).sort((a,b)=>b[1]-a[1]).map(([k,n])=>{
     const p=PL[k];if(!p)return'';
-    return`<div class="stat-item"><span class="badge ${p.c}" style="font-size:.58rem">[${p.s}]</span><span class="stat-n">${n}</span><span class="stat-lbl">${p.l}</span></div>`;
+    return`<div class="stat-item"><span class="badge ${p.c}" style="font-size:.58rem">[${p.s}]</span><span class="stat-n">${n}</span></div>`;
   }).join('');
-  document.getElementById('cal-stats').innerHTML=statsHtml||`<span style="font-size:.65rem;color:var(--ink3)">本月尚無排程</span>`;
+  const collabStats=filtered.length?`<div style="margin-left:auto;display:flex;gap:8px;font-size:.65rem;color:var(--ink3);align-items:center;border-left:1px solid var(--bdr);padding-left:10px;">
+    <span>自主 <b style="color:var(--ink2)">${ownCnt}</b></span>
+    <span>協作 <b style="color:#6d28d9">${collabCnt}</b></span>
+  </div>`:'';
+  document.getElementById('cal-stats').innerHTML=(statsHtml||`<span style="font-size:.65rem;color:var(--ink3)">本月尚無排程</span>`)+collabStats;
 
   // Build event map — sort pending first, done last
   const evMap={};
@@ -932,8 +956,13 @@ function toggleCollabModal(id,el){
   s.collab=s.collab==='1'?'':'1';
   el.classList.toggle('on',s.collab==='1');
   el.textContent=s.collab==='1'?'協作貼文':'自主貼文';
-  upd(id,'collab',s.collab);
-  setTimeout(()=>showDetail(id),200);
+  s.updatedAt=nowISO();
+  // Save and re-render calendar immediately so chip colour updates
+  gasCall({action:'update',id,row:[s.id,s.date,s.time,s.acct,s.plat,s.topic,s.status,s.note,s.collab||'',s.createdAt,s.updatedAt,s.createdBy||'',currentUser()]})
+    .then(()=>setSS('ok','已儲存 '+hhmm())).catch(()=>setSS('err','更新失敗'));
+  renderCal();
+  renderTable();
+  setTimeout(()=>showDetail(id),150);
 }
 function calDayClick(e,ds){
   // Don't trigger if clicked on a chip or more-chip
