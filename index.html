@@ -77,11 +77,11 @@ main{display:grid;grid-template-columns:400px 1fr;height:calc(100vh - 43px);over
 .btn-add:disabled{background:#ccc;cursor:not-allowed;}
 
 /* FILTER BAR */
-.filter-bar{padding:7px 16px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex-shrink:0;}
+.filter-bar{padding:7px 16px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:6px;flex-shrink:0;overflow-x:auto;}
 .filter-bar select{padding:4px 7px;background:var(--surf2);border:1.5px solid var(--bdr);border-radius:5px;font-family:inherit;font-size:.71rem;color:var(--ink);outline:none;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='6'%3E%3Cpath d='M1 1l3.5 3.5L8 1' stroke='%239a9590' stroke-width='1.4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 6px center;padding-right:20px;cursor:pointer;}
 .filter-bar select:focus{border-color:var(--acc);}
 .flabel{font-size:.6rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);white-space:nowrap;}
-.btn-ref{background:var(--surf2);border:1.5px solid var(--bdr);color:var(--ink2);border-radius:5px;padding:3px 9px;font-family:inherit;font-size:.69rem;cursor:pointer;margin-left:auto;transition:background .12s;}
+.btn-ref{background:var(--surf2);border:1.5px solid var(--bdr);color:var(--ink2);border-radius:5px;padding:3px 9px;font-family:inherit;font-size:.69rem;cursor:pointer;transition:background .12s;white-space:nowrap;}
 .btn-ref:hover{background:var(--bdr);}
 
 /* TABLE */
@@ -239,7 +239,7 @@ textarea.minp{min-height:48px;resize:vertical;}
 .hdr-announce-btn{background:none;border:none;color:rgba(255,255,255,.55);cursor:pointer;padding:4px 8px;border-radius:6px;font-size:.75rem;display:flex;align-items:center;gap:5px;transition:background .13s;position:relative;}
 .hdr-announce-btn:hover{background:rgba(255,255,255,.1);color:#fff;}
 .hdr-announce-btn .badge-new{position:absolute;top:1px;right:2px;width:7px;height:7px;border-radius:50%;background:var(--acc);border:1.5px solid var(--ink);}
-.announce-popup{display:none;position:absolute;top:calc(100% + 8px);right:0;width:340px;background:var(--surf);border:1.5px solid var(--bdr);border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.15);z-index:200;padding:14px 16px;}
+.announce-popup{display:none;position:absolute;top:calc(100% + 8px);right:0;width:340px;background:var(--surf);border:1.5px solid var(--bdr);border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.15);z-index:200;padding:14px 16px;color:var(--ink);}
 .announce-popup.open{display:block;}
 .announce-popup-title{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--acc);margin-bottom:10px;}
 /* USERNAME PROMPT OVERLAY */
@@ -260,7 +260,7 @@ textarea.minp{min-height:48px;resize:vertical;}
 .announce-toggle:hover{background:var(--surf2);}
 .announce-body{margin-top:8px;display:none;}
 .announce-body.open{display:block;}
-.announce-item{display:flex;gap:8px;padding:5px 0;border-bottom:1px solid var(--bdr);font-size:.75rem;line-height:1.5;}
+.announce-item{display:flex;gap:8px;padding:5px 0;border-bottom:1px solid var(--bdr);font-size:.75rem;line-height:1.5;color:var(--ink2);}
 .announce-item:last-child{border-bottom:none;padding-bottom:0;}
 .announce-dot{width:6px;height:6px;border-radius:50%;background:var(--acc);margin-top:5px;flex-shrink:0;}
 .announce-new{font-size:.58rem;font-weight:700;background:var(--acc-bg);color:var(--acc);border-radius:3px;padding:1px 5px;margin-left:5px;vertical-align:middle;}
@@ -682,6 +682,9 @@ function showDetail(id){
           <option value="GarminTW"${s.acct==='GarminTW'?' selected':''}>GarminTW</option>
           <option value="GRC"${s.acct==='GRC'?' selected':''}>GRC</option>
         </select></div></div>
+      <div class="mrow"><div class="mlabel">類型</div><div class="mval">
+        <span class="collab-toggle${s.collab==='1'?' on':''}" onclick="toggleCollabModal('${s.id}',this)">${s.collab==='1'?'協作貼文':'自主貼文'}</span>
+      </div></div>
       <div class="mrow"><div class="mlabel">日期</div><div class="mval" style="display:flex;gap:6px">
         <input type="date" ${inp} value="${s.date}" onchange="upd('${s.id}','date',this.value);setTimeout(()=>showDetail('${s.id}'),200)" style="flex:1;font-family:'DM Mono',monospace;">
         <input type="time" ${inp} value="${s.time||''}" onchange="upd('${s.id}','time',this.value);setTimeout(()=>showDetail('${s.id}'),200)" style="width:88px;font-family:'DM Mono',monospace;">
