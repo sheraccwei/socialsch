@@ -643,14 +643,19 @@ async function addRow(){
 async function upd(id,field,val){
   const s=data.find(s=>s.id===id);
   if(!s) return;
-  s[field]=val; s.updatedAt=nowISO();
+  s[field]=val;
+  s.updatedAt=nowISO();
   if(field==='date'||field==='time') sortData();
+  render();
   setSS('busy','更新中…');
   try{
-    await gasCall({action:'update',id,row:[s.id,s.date,s.time,s.acct,s.plat,s.topic,s.status,s.note,s.collab||'',s.createdAt,s.updatedAt,s.createdBy||'',currentUser()]});
+    const saveRow=[s.id,s.date,s.time,s.acct,s.plat,s.topic,s.status,s.note,s.collab||'',s.createdAt,s.updatedAt,s.createdBy||'',currentUser()];
+    await gasCall({action:'update',id,row:saveRow});
     setSS('ok','已儲存 '+hhmm());
-  }catch(e){ setSS('err','更新失敗'); }
-  render();
+  }catch(e){
+    setSS('err','更新失敗');
+    console.error('upd error:',e);
+  }
 }
 async function handleStatus(id,val){
   if(val==='other'){
