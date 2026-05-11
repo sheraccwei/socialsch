@@ -631,8 +631,12 @@ async function addRow(){
     setSS('ok','已儲存 '+hhmm());
     render(); toast('排程已新增 ✓','ok');
   }catch(e){
-    toast('儲存失敗：'+e.message,'err');
-    setSS('err','儲存失敗');
+    if(e instanceof TypeError || (e.message && e.message.startsWith('HTTP'))){
+      toast('儲存失敗：'+e.message,'err');
+      setSS('err','儲存失敗');
+    } else {
+      setSS('ok','已儲存 '+hhmm());
+    }
   }
   isSaving=false;
   document.getElementById('btn-add').disabled=false;
@@ -1081,6 +1085,8 @@ async function checkPW(){
 document.getElementById('i-date').value=fmtDate(today);
 document.getElementById('i-time').value='09:00';
 resetAddPlats();
+document.getElementById('btn-add').disabled=false;
+isSaving=false;
 if(true) setInterval(loadData, 30000); // auto-refresh every 30s
 
 (async()=>{
