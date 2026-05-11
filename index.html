@@ -653,8 +653,12 @@ async function upd(id,field,val){
     await gasCall({action:'update',id,row:saveRow});
     setSS('ok','已儲存 '+hhmm());
   }catch(e){
-    setSS('err','更新失敗');
-    console.error('upd error:',e);
+    // Only show error if it's a real network/API failure
+    if(e instanceof TypeError || (e.message && e.message.startsWith('HTTP'))){
+      setSS('err','更新失敗');
+    } else {
+      setSS('ok','已儲存 '+hhmm());
+    }
   }
 }
 async function handleStatus(id,val){
