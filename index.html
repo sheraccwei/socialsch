@@ -764,7 +764,7 @@ function showMoreDay(ds){
       <div style="display:flex;align-items:center;gap:5px;margin-bottom:3px;">
         ${platBadgesHtml(s.plat)}
         <span class="badge ${st.c}" style="font-size:.58rem">${st.i} ${st.l}</span>
-        ${s.time?`<span style="font-family:'DM Mono',monospace;font-size:.63rem;color:var(--ink3)">${esc(s.time)}</span>`:''}
+        ${s.time?'<span style="font-family:\'DM Mono\',monospace;font-size:.63rem;color:var(--ink3)">'+esc(s.time)+'</span>':''}
       </div>
       <div style="font-size:.79rem;font-weight:500">${esc(s.topic)}</div>
     </div>`;
@@ -841,7 +841,7 @@ function renderTable(){
           ${Object.entries(ST).map(([k,v])=>`<option value="${k}"${k===s.status?' selected':''}>${v.i} ${v.l}</option>`).join('')}
         </select>
       </td>
-      <td style="min-width:72px" class="${s.note?'has-note':''}" ${s.note?`data-note="${esc(s.note)}"`:''}>${noteCell}</td>
+      <td style="min-width:72px" class="${s.note?'has-note':''}" ${s.note?'data-note="'+esc(s.note)+'"':''}>${noteCell}</td>
       <td class="meta-td" style="min-width:100px">
         <div>建 ${shortDT(s.createdAt)} ${s.createdBy?'<span style="color:var(--ink2);font-size:.56rem">'+esc(s.createdBy)+'</span>':''}</div>
         <div class="meta-upd">改 ${shortDT(s.updatedAt)} ${s.updatedBy?'<span style="opacity:.8;font-size:.56rem">'+esc(s.updatedBy)+'</span>':''}</div>
@@ -958,7 +958,7 @@ function renderAlert(){
     const dl=DOWS[d.getDay()];
     const isG=s.acct==='GarminTW';
     return`<div class="alert-item" onclick="showDetail('${s.id}')">
-      <span class="alert-date">${pad(d.getMonth()+1)}/${pad(d.getDate())}（${dl}）${s.time?` ${esc(s.time)}`:''}</span>
+      <span class="alert-date">${pad(d.getMonth()+1)}/${pad(d.getDate())}（${dl}）${s.time?' '+esc(s.time):''}</span>
       ${platBadgesHtml(s.plat)}
       <span class="badge ${isG?'ab-garmin':'ab-grc'}" style="font-size:.55rem">${esc(s.acct)}</span>
       <span style="flex:1;font-size:.74rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.topic)}</span>
@@ -1055,11 +1055,12 @@ function sbar(on){
   if(on){b.style.transition='width .3s';b.style.width='65%';}
   else{b.style.width='100%';setTimeout(()=>{b.style.transition='none';b.style.width='0';setTimeout(()=>b.style.transition='width .3s',60);},350);}
 }
+let _toastTimer;
 function toast(msg,type=''){
   const el=document.getElementById('toast');
   el.textContent=msg; el.className='toast '+(type||'');
-  el.classList.add('show'); clearTimeout(_tt);
-  _tt=setTimeout(()=>el.classList.remove('show'),2800);
+  el.classList.add('show'); clearTimeout(_toastTimer);
+  _toastTimer=setTimeout(()=>el.classList.remove('show'),2800);
 }
 
 /* ── PASSWORD ── */
