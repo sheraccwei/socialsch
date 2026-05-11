@@ -1011,7 +1011,7 @@ function showChipTooltip(e,id){
     <div class="tt-row"><span class="tt-label">平台</span><span class="tt-val">${platLabel(s.plat)}</span></div>
     <div class="tt-row"><span class="tt-label">狀態</span><span class="tt-val">${st.i} ${st.l}</span></div>
     ${s.collab==='1'?'<div class="tt-row"><span class="tt-label">類型</span><span class="tt-val tt-collab">協作貼文</span></div>':''}
-    ${s.note?`<div class="tt-note">📝 ${esc(s.note)}</div>`:''}
+    ${s.note?'<div class="tt-note">📝 '+esc(s.note)+'</div>':''}
   `;
   positionTooltip(e);
   _tt.style.display='block';
