@@ -267,6 +267,23 @@ textarea.minp{min-height:48px;resize:vertical;}
 /* USER CHIP IN HEADER */
 .user-name-chip{background:rgba(255,255,255,.1);border-radius:20px;padding:3px 10px;font-size:.65rem;color:rgba(255,255,255,.6);display:flex;align-items:center;gap:5px;}
 .user-name-chip span{color:rgba(255,255,255,.9);font-weight:600;}
+/* CHIP TOOLTIP */
+.chip-tooltip{
+  position:fixed;display:none;
+  background:#faf8f4;color:var(--ink);
+  border:1.5px solid var(--bdr2);
+  border-radius:9px;padding:11px 14px;
+  font-size:.72rem;line-height:1.75;
+  box-shadow:0 4px 18px rgba(0,0,0,.10);
+  z-index:999;pointer-events:none;
+  max-width:230px;min-width:150px;
+}
+.chip-tooltip .tt-title{font-weight:700;font-size:.78rem;margin-bottom:6px;color:var(--ink);border-bottom:1px solid var(--bdr);padding-bottom:6px;}
+.chip-tooltip .tt-row{display:flex;gap:6px;align-items:baseline;font-size:.68rem;margin-bottom:1px;}
+.chip-tooltip .tt-label{color:var(--ink3);flex-shrink:0;min-width:32px;}
+.chip-tooltip .tt-val{color:var(--ink2);}
+.chip-tooltip .tt-note{margin-top:7px;padding:6px 8px;background:var(--amber-bg);border-radius:5px;font-size:.68rem;color:var(--ink2);line-height:1.55;}
+.chip-tooltip .tt-collab{color:#6d28d9;font-weight:600;}
 /* TOAST */
 .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(8px);background:var(--ink);color:#fff;padding:8px 16px;border-radius:7px;font-size:.75rem;opacity:0;transition:opacity .18s,transform .18s;pointer-events:none;z-index:9999;white-space:nowrap;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
@@ -287,6 +304,7 @@ textarea.minp{min-height:48px;resize:vertical;}
 <div class="toast" id="toast"></div>
 <div id="overlay"><div class="spinner"></div><div class="ov-txt" id="ov-txt">連線中…</div></div>
 <div id="modal-area"></div>
+<div class="chip-tooltip" id="chip-tooltip"></div>
 
 <div class="name-overlay hidden" id="name-overlay">
   <div class="name-card">
@@ -892,7 +910,7 @@ function renderCal(){
       const label=`${platLabel(s.plat)}${s.time?' '+s.time:''} ${s.topic}`;
       const acctCls=s.acct==='GarminTW'?'chip-garmin':'chip-grc';
       const collabCls=s.collab==='1'?' chip-collab':'';
-      return`<div class="chip ${acctCls}${collabCls}${isDone?' done-chip':''}" draggable="true" ondragstart="chipDragStart(event,'${s.id}')" onclick="showDetail('${s.id}')" title="${esc(label)}${s.collab==='1'?' [協作]':''}" style="cursor:grab">
+      return`<div class="chip ${acctCls}${collabCls}${isDone?' done-chip':''}" draggable="true" ondragstart="chipDragStart(event,'${s.id}')" onclick="showDetail('${s.id}')" onmouseenter="showChipTooltip(event,'${s.id}')" onmousemove="moveChipTooltip(event)" onmouseleave="hideChipTooltip()" style="cursor:grab">
         <div class="cbar"></div>
         <span class="chip-plat">${platLabel(s.plat)}</span>
         <span class="chip-label">${s.time?' '+esc(s.time):''} ${esc(s.topic)}</span>
@@ -967,6 +985,35 @@ function toggleCollabModal(id,el){
   renderTable();
   setTimeout(()=>showDetail(id),150);
 }
+/* ── CHIP TOOLTIP ── */
+const _tt = document.getElementById('chip-tooltip');
+
+function showChipTooltip(e,id){
+  const s=data.find(s=>s.id===id); if(!s) return;
+  const st=ST[s.status]||ST.pending;
+  _tt.innerHTML=`
+    <div class="tt-title">${esc(s.topic)}</div>
+    <div class="tt-row"><span class="tt-label">帳號</span><span class="tt-val">${esc(s.acct)}</span></div>
+    <div class="tt-row"><span class="tt-label">日期</span><span class="tt-val">${esc(s.date)}${s.time?' '+esc(s.time):''}</span></div>
+    <div class="tt-row"><span class="tt-label">平台</span><span class="tt-val">${platLabel(s.plat)}</span></div>
+    <div class="tt-row"><span class="tt-label">狀態</span><span class="tt-val">${st.i} ${st.l}</span></div>
+    ${s.collab==='1'?'<div class="tt-row"><span class="tt-label">類型</span><span class="tt-val tt-collab">協作貼文</span></div>':''}
+    ${s.note?`<div class="tt-note">📝 ${esc(s.note)}</div>`:''}
+  `;
+  positionTooltip(e);
+  _tt.style.display='block';
+}
+function positionTooltip(e){
+  const tw=_tt.offsetWidth||220, th=_tt.offsetHeight||120;
+  const vw=window.innerWidth, vh=window.innerHeight;
+  let left=e.clientX+14, top=e.clientY+14;
+  if(left+tw>vw-10) left=e.clientX-tw-10;
+  if(top+th>vh-10) top=e.clientY-th-10;
+  _tt.style.left=left+'px'; _tt.style.top=top+'px';
+}
+function moveChipTooltip(e){ if(_tt.style.display==='block') positionTooltip(e); }
+function hideChipTooltip(){ _tt.style.display='none'; }
+
 function calDayClick(e,ds){
   // Don't trigger if clicked on a chip or more-chip
   if(e.target.closest('.chip')||e.target.closest('.more-chip')) return;
@@ -995,7 +1042,6 @@ function sbar(on){
   if(on){b.style.transition='width .3s';b.style.width='65%';}
   else{b.style.width='100%';setTimeout(()=>{b.style.transition='none';b.style.width='0';setTimeout(()=>b.style.transition='width .3s',60);},350);}
 }
-let _tt;
 function toast(msg,type=''){
   const el=document.getElementById('toast');
   el.textContent=msg; el.className='toast '+(type||'');
