@@ -253,12 +253,12 @@ textarea.minp{min-height:48px;resize:vertical;}
 /* STAT HOVER TOOLTIP */
 .stat-hover{position:relative;cursor:default;}
 .stat-hover-popup{
-  display:none;position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);
+  display:none;position:fixed;
   background:#faf8f4;border:1.5px solid var(--bdr2);border-radius:8px;
-  padding:10px 12px;min-width:200px;max-width:260px;
-  box-shadow:0 4px 16px rgba(0,0,0,.1);z-index:99;
+  padding:10px 12px;min-width:180px;max-width:240px;
+  box-shadow:0 4px 16px rgba(0,0,0,.1);z-index:999;
   font-size:.7rem;line-height:1.6;color:var(--ink2);
-  white-space:nowrap;
+  white-space:nowrap;pointer-events:none;
 }
 .stat-hover:hover .stat-hover-popup{display:block;}
 .stat-hover-title{font-size:.62rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);margin-bottom:6px;}
@@ -349,8 +349,15 @@ textarea.minp{min-height:48px;resize:vertical;}
         🔔 更新公告
         <span class="badge-new" id="announce-new-dot"></span>
       </button>
-      <div class="announce-popup" id="announce-popup" style="max-height:420px;overflow-y:auto;">
-        <div class="announce-section-title">📢 系統更新</div>
+      <div class="announce-popup" id="announce-popup" style="max-height:460px;">
+        <!-- Tabs -->
+        <div style="display:flex;gap:0;margin-bottom:12px;border-bottom:2px solid var(--bdr);">
+          <button id="atab-sys" onclick="switchAnnounceTab('sys')" style="flex:1;padding:6px;font-size:.72rem;font-weight:700;border:none;background:none;cursor:pointer;border-bottom:2px solid var(--acc);margin-bottom:-2px;color:var(--acc);font-family:inherit;">系統更新</button>
+          <button id="atab-log" onclick="switchAnnounceTab('log')" style="flex:1;padding:6px;font-size:.72rem;font-weight:700;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;color:var(--ink3);font-family:inherit;">近期排程異動</button>
+        </div>
+        <!-- Tab: 系統更新 -->
+        <div id="atab-sys-body" style="overflow-y:auto;max-height:360px;">
+        <div class="announce-section-title" style="display:none">📢 系統更新</div>
         <div class="announce-item">
           <div class="announce-dot"></div>
           <div><strong>2026/05</strong><span class="announce-new">最新</span><br>協作標記（紫色）、拖曳移動排程、使用者名稱記錄、hover 排程預覽、近期異動記錄</div>
@@ -363,9 +370,11 @@ textarea.minp{min-height:48px;resize:vertical;}
           <div class="announce-dot" style="background:var(--ink3)"></div>
           <div><strong>2026/03</strong><br>工具上線：Google Sheets 即時同步、多平台複選、狀態管理、密碼保護</div>
         </div>
-        <hr class="announce-divider">
-        <div class="announce-section-title">🕐 近期排程異動</div>
-        <div id="announce-changelog"></div>
+        </div><!-- end atab-sys-body -->
+        <!-- Tab: 近期排程異動 -->
+        <div id="atab-log-body" style="display:none;overflow-y:auto;max-height:360px;">
+          <div id="announce-changelog"></div>
+        </div>
       </div>
     </div>
     <div class="user-name-chip" id="user-name-chip"><span id="user-name-display">—</span></div>
@@ -513,15 +522,31 @@ function saveName(){
   document.getElementById('user-name-display').textContent=v;
 }
 
+function switchAnnounceTab(tab){
+  const sys=document.getElementById('atab-sys-body');
+  const log=document.getElementById('atab-log-body');
+  const btnSys=document.getElementById('atab-sys');
+  const btnLog=document.getElementById('atab-log');
+  if(tab==='sys'){
+    sys.style.display='block'; log.style.display='none';
+    btnSys.style.borderBottomColor='var(--acc)'; btnSys.style.color='var(--acc)';
+    btnLog.style.borderBottomColor='transparent'; btnLog.style.color='var(--ink3)';
+  } else {
+    sys.style.display='none'; log.style.display='block';
+    btnLog.style.borderBottomColor='var(--acc)'; btnLog.style.color='var(--acc)';
+    btnSys.style.borderBottomColor='transparent'; btnSys.style.color='var(--ink3)';
+    // Render changelog when switching to log tab
+    const cl=document.getElementById('announce-changelog');
+    if(cl) cl.innerHTML=renderChangelog();
+  }
+}
 function toggleAnnouncePopup(e){
   e.stopPropagation();
   const popup=document.getElementById('announce-popup');
   const isOpen=popup.classList.toggle('open');
   if(isOpen){
-    // Render changelog every time popup opens
-    const cl=document.getElementById('announce-changelog');
-    if(cl) cl.innerHTML=renderChangelog();
-    // Hide new dot
+    // Reset to sys tab on open
+    switchAnnounceTab('sys');
     document.getElementById('announce-new-dot').style.display='none';
     localStorage.setItem('sch_announce_seen','2026-05');
   }
@@ -918,18 +943,15 @@ function renderCal(){
   // Build hover lists for own/collab
   const ownList=filtered.filter(s=>s.collab!=='1');
   const collabList=filtered.filter(s=>s.collab==='1');
+  _statOwnList=ownList; _statCollabList=collabList;
   function statHoverHtml(items){
     if(!items.length) return '<div style="color:var(--ink3);font-size:.68rem">無</div>';
     return items.slice(0,10).map(s=>`<div class="stat-hover-item">${esc(s.date)} ${esc(s.topic)}</div>`).join('')
       +(items.length>10?`<div style="color:var(--ink3);font-size:.63rem">還有 ${items.length-10} 筆…</div>`:'');
   }
   const collabStats=filtered.length?`<div style="margin-left:auto;display:flex;gap:8px;font-size:.65rem;color:var(--ink3);align-items:center;border-left:1px solid var(--bdr);padding-left:10px;">
-    <span class="stat-hover">自主 <b style="color:var(--ink2)">${ownCnt}</b>
-      <div class="stat-hover-popup"><div class="stat-hover-title">自主貼文</div>${statHoverHtml(ownList)}</div>
-    </span>
-    <span class="stat-hover">協作 <b style="color:#6d28d9">${collabCnt}</b>
-      <div class="stat-hover-popup"><div class="stat-hover-title">協作貼文</div>${statHoverHtml(collabList)}</div>
-    </span>
+    <span style="cursor:default;position:relative" onmouseenter="showStatPopup(event,'own')" onmouseleave="hideStatPopup()">自主 <b style="color:var(--ink2)">${ownCnt}</b></span>
+    <span style="cursor:default;position:relative" onmouseenter="showStatPopup(event,'collab')" onmouseleave="hideStatPopup()">協作 <b style="color:#6d28d9">${collabCnt}</b></span>
   </div>`:'';
   document.getElementById('cal-stats').innerHTML=(statsHtml||`<span style="font-size:.65rem;color:var(--ink3)">本月尚無排程</span>`)+collabStats;
 
@@ -1068,6 +1090,37 @@ function renderChangelog(){
     </div>`;
   }).join('');
 }
+
+/* ── STAT HOVER POPUP ── */
+let _statOwnList=[], _statCollabList=[];
+const _statPopup=document.createElement('div');
+_statPopup.className='stat-hover-popup';
+_statPopup.id='stat-hover-popup';
+document.body.appendChild(_statPopup);
+
+function showStatPopup(e, type){
+  const items = type==='own'?_statOwnList:_statCollabList;
+  const title = type==='own'?'自主貼文':'協作貼文';
+  if(!items.length){ _statPopup.style.display='none'; return; }
+  _statPopup.innerHTML='<div class="stat-hover-title">'+title+'</div>'
+    +items.slice(0,10).map(s=>'<div class="stat-hover-item">'+esc(s.date)+' '+esc(s.topic)+'</div>').join('')
+    +(items.length>10?'<div style="color:var(--ink3);font-size:.63rem">還有 '+(items.length-10)+' 筆…</div>':'');
+  // Position: above the element, avoid right-edge overflow
+  const rect=e.currentTarget.getBoundingClientRect();
+  const pw=240;
+  let left=rect.left;
+  if(left+pw > window.innerWidth-10) left=window.innerWidth-pw-10;
+  const top=Math.max(8, rect.top - _statPopup.offsetHeight - 8);
+  _statPopup.style.left=left+'px';
+  _statPopup.style.top=top+'px';
+  _statPopup.style.display='block';
+  // Reposition after render (height is now known)
+  requestAnimationFrame(()=>{
+    const h=_statPopup.offsetHeight;
+    _statPopup.style.top=Math.max(8, rect.top-h-8)+'px';
+  });
+}
+function hideStatPopup(){ _statPopup.style.display='none'; }
 
 /* ── CHIP TOOLTIP ── */
 const _tt = document.getElementById('chip-tooltip');
