@@ -290,6 +290,16 @@ textarea.minp{min-height:48px;resize:vertical;}
 /* USER CHIP IN HEADER */
 .user-name-chip{background:rgba(255,255,255,.1);border-radius:20px;padding:3px 10px;font-size:.65rem;color:rgba(255,255,255,.6);display:flex;align-items:center;gap:5px;}
 .user-name-chip span{color:rgba(255,255,255,.9);font-weight:600;}
+/* MONTHLY STATS POPUP */
+.monthly-stats-popup{display:none;position:fixed;background:#faf8f4;border:1.5px solid var(--bdr2);border-radius:10px;padding:12px 14px;min-width:240px;box-shadow:0 4px 18px rgba(0,0,0,.12);z-index:999;}
+.monthly-stats-popup.open{display:block;}
+.msp-title{font-size:.63rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:8px;}
+.msp-row{display:grid;grid-template-columns:58px 1fr 1fr 1fr;gap:4px;padding:4px 0;border-bottom:1px solid var(--bdr);font-size:.7rem;align-items:center;}
+.msp-row:last-child{border-bottom:none;}
+.msp-row.msp-hdr{font-size:.6rem;color:var(--ink3);font-weight:600;letter-spacing:.06em;padding-bottom:5px;}
+.msp-month{font-family:"DM Mono",monospace;color:var(--ink);font-size:.69rem;}
+.msp-n{text-align:right;font-family:"DM Mono",monospace;font-weight:600;}
+.msp-n.collab-n{color:#6d28d9;}
 /* CHIP TOOLTIP */
 .chip-tooltip{
   position:fixed;display:none;
@@ -328,6 +338,7 @@ textarea.minp{min-height:48px;resize:vertical;}
 <div id="overlay"><div class="spinner"></div><div class="ov-txt" id="ov-txt">連線中…</div></div>
 <div id="modal-area"></div>
 <div class="chip-tooltip" id="chip-tooltip"></div>
+<div class="monthly-stats-popup" id="monthly-stats-popup"></div>
 
 <div class="name-overlay hidden" id="name-overlay">
   <div class="name-card">
@@ -343,7 +354,7 @@ textarea.minp{min-height:48px;resize:vertical;}
   <div class="tagline">社群排程管理</div>
   <div class="hdr-r">
     <div style="display:flex;align-items:center;gap:5px;"><div class="sdot" id="sdot"></div><div class="stxt" id="stxt">—</div></div>
-    <div class="total-pill" id="total-pill">0 筆</div>
+    <div class="total-pill" id="total-pill" onclick="toggleMonthlyStats(event)" style="cursor:pointer" title="點擊查看各月統計">0 筆</div>
     <div style="position:relative;">
       <button class="hdr-announce-btn" onclick="toggleAnnouncePopup(event)" title="更新公告">
         🔔 更新公告
@@ -551,8 +562,12 @@ function toggleAnnouncePopup(e){
     localStorage.setItem('sch_announce_seen','2026-05');
   }
 }
-document.addEventListener('click',()=>{
-  document.getElementById('announce-popup')?.classList.remove('open');
+document.addEventListener('click',(e)=>{
+  const popup=document.getElementById('announce-popup');
+  const btn=document.querySelector('.hdr-announce-btn');
+  if(popup&&!popup.contains(e.target)&&(!btn||!btn.contains(e.target))){
+    popup.classList.remove('open');
+  }
 });
 function toggleCollab(){
   addIsCollab=!addIsCollab;
@@ -1091,36 +1106,92 @@ function renderChangelog(){
   }).join('');
 }
 
-/* ── STAT HOVER POPUP ── */
+/* ── STAT HOVER POPUP (now click-based) ── */
 let _statOwnList=[], _statCollabList=[];
-const _statPopup=document.createElement('div');
-_statPopup.className='stat-hover-popup';
-_statPopup.id='stat-hover-popup';
-document.body.appendChild(_statPopup);
+let _statPopupOpen=null; // 'own' | 'collab' | null
 
 function showStatPopup(e, type){
-  const items = type==='own'?_statOwnList:_statCollabList;
-  const title = type==='own'?'自主貼文':'協作貼文';
-  if(!items.length){ _statPopup.style.display='none'; return; }
-  _statPopup.innerHTML='<div class="stat-hover-title">'+title+'</div>'
-    +items.slice(0,10).map(s=>'<div class="stat-hover-item">'+esc(s.date)+' '+esc(s.topic)+'</div>').join('')
-    +(items.length>10?'<div style="color:var(--ink3);font-size:.63rem">還有 '+(items.length-10)+' 筆…</div>':'');
-  // Position: above the element, avoid right-edge overflow
+  e.stopPropagation();
+  const popup=document.getElementById('stat-hover-popup');
+  if(!popup) return;
+  if(_statPopupOpen===type){ hideStatPopup(); return; }
+  _statPopupOpen=type;
+  const items=type==='own'?_statOwnList:_statCollabList;
+  const title=type==='own'?'自主貼文':'協作貼文';
+  if(!items.length){ popup.style.display='none'; _statPopupOpen=null; return; }
+  popup.innerHTML='<div class="stat-hover-title">'+title+'</div>'
+    +items.map((s,i)=>'<div class="stat-hover-item" data-idx="'+i+'" style="cursor:pointer">'+esc(s.date)+' '+esc(s.topic)+'</div>').join('')
+    +(items.length>10?'<div style="color:var(--ink3);font-size:.63rem;padding-top:3px">共 '+items.length+' 筆</div>':'');
+  // Attach click handlers
+  requestAnimationFrame(()=>{
+    popup.querySelectorAll('.stat-hover-item').forEach((el,i)=>{
+      el.onclick=()=>{ hideStatPopup(); if(items[i]) showDetail(items[i].id); };
+    });
+  });
+  const rect=e.currentTarget.getBoundingClientRect();
+  const pw=240; const ph=Math.min(items.length*28+40, 320);
+  let left=rect.left; let top=rect.top-ph-8;
+  if(left+pw>window.innerWidth-10) left=window.innerWidth-pw-10;
+  if(top<8){ top=rect.bottom+8; }
+  popup.style.cssText='display:block;position:fixed;left:'+left+'px;top:'+top+'px;max-height:320px;overflow-y:auto;';
+  popup.className='stat-hover-popup';
+}
+function hideStatPopup(){
+  const popup=document.getElementById('stat-hover-popup');
+  if(popup) popup.style.display='none';
+  _statPopupOpen=null;
+}
+document.addEventListener('click',(e)=>{
+  const popup=document.getElementById('stat-hover-popup');
+  if(popup&&popup.style.display==='block'&&!popup.contains(e.target)) hideStatPopup();
+});
+
+/* ── MONTHLY STATS POPUP ── */
+let _mspOpen=false;
+function toggleMonthlyStats(e){
+  e.stopPropagation();
+  const popup=document.getElementById('monthly-stats-popup');
+  if(!popup) return;
+  if(_mspOpen){ popup.classList.remove('open'); _mspOpen=false; return; }
+  _mspOpen=true;
+  // Build monthly stats from data
+  const monthMap={};
+  data.forEach(s=>{
+    if(!s.date) return;
+    const m=s.date.slice(0,7);
+    if(!monthMap[m]) monthMap[m]={total:0,own:0,collab:0};
+    monthMap[m].total++;
+    if(s.collab==='1') monthMap[m].collab++; else monthMap[m].own++;
+  });
+  const months=Object.keys(monthMap).sort().reverse();
+  if(!months.length){ popup.classList.remove('open'); _mspOpen=false; return; }
+  popup.innerHTML=
+    '<div class="msp-title">各月份統計</div>'+
+    '<div class="msp-row msp-hdr"><span>月份</span><span class="msp-n">總計</span><span class="msp-n">自主</span><span class="msp-n collab-n">協作</span></div>'+
+    months.map(m=>{
+      const y=m.slice(0,4), mo=parseInt(m.slice(5));
+      const d=monthMap[m];
+      return`<div class="msp-row"><span class="msp-month">${y}/${String(mo).padStart(2,'0')}</span><span class="msp-n">${d.total}</span><span class="msp-n">${d.own}</span><span class="msp-n collab-n">${d.collab}</span></div>`;
+    }).join('');
+  // Position above the pill
   const rect=e.currentTarget.getBoundingClientRect();
   const pw=240;
-  let left=rect.left;
-  if(left+pw > window.innerWidth-10) left=window.innerWidth-pw-10;
-  const top=Math.max(8, rect.top - _statPopup.offsetHeight - 8);
-  _statPopup.style.left=left+'px';
-  _statPopup.style.top=top+'px';
-  _statPopup.style.display='block';
-  // Reposition after render (height is now known)
-  requestAnimationFrame(()=>{
-    const h=_statPopup.offsetHeight;
-    _statPopup.style.top=Math.max(8, rect.top-h-8)+'px';
-  });
+  let left=rect.right-pw;
+  if(left<10) left=10;
+  const top=rect.top-8-Math.min(months.length*32+60,360);
+  popup.style.left=left+'px';
+  popup.style.top=Math.max(10,top)+'px';
+  popup.style.maxHeight='360px';
+  popup.style.overflowY='auto';
+  popup.classList.add('open');
 }
-function hideStatPopup(){ _statPopup.style.display='none'; }
+document.addEventListener('click',(e)=>{
+  const popup=document.getElementById('monthly-stats-popup');
+  const pill=document.getElementById('total-pill');
+  if(popup&&_mspOpen&&!popup.contains(e.target)&&e.target!==pill){
+    popup.classList.remove('open'); _mspOpen=false;
+  }
+});
 
 /* ── CHIP TOOLTIP ── */
 const _tt = document.getElementById('chip-tooltip');
