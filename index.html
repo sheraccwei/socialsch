@@ -241,6 +241,29 @@ textarea.minp{min-height:48px;resize:vertical;}
 .hdr-announce-btn .badge-new{position:absolute;top:1px;right:2px;width:7px;height:7px;border-radius:50%;background:var(--acc);border:1.5px solid var(--ink);}
 .announce-popup{display:none;position:absolute;top:calc(100% + 8px);right:0;width:340px;background:var(--surf);border:1.5px solid var(--bdr);border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.15);z-index:200;padding:14px 16px;color:var(--ink);}
 .announce-popup.open{display:block;}
+.announce-section-title{font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin:10px 0 6px;display:flex;align-items:center;gap:5px;}
+.announce-section-title:first-child{margin-top:0;}
+.announce-divider{border:none;border-top:1px solid var(--bdr);margin:10px 0;}
+.changelog-item{padding:5px 0;border-bottom:1px solid var(--bdr);font-size:.72rem;line-height:1.55;}
+.changelog-item:last-child{border-bottom:none;}
+.changelog-time{font-family:'DM Mono',monospace;font-size:.63rem;color:var(--ink3);}
+.changelog-user{font-weight:700;color:var(--acc);}
+.changelog-action{color:var(--ink2);}
+.changelog-topic{color:var(--ink);font-weight:500;}
+/* STAT HOVER TOOLTIP */
+.stat-hover{position:relative;cursor:default;}
+.stat-hover-popup{
+  display:none;position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);
+  background:#faf8f4;border:1.5px solid var(--bdr2);border-radius:8px;
+  padding:10px 12px;min-width:200px;max-width:260px;
+  box-shadow:0 4px 16px rgba(0,0,0,.1);z-index:99;
+  font-size:.7rem;line-height:1.6;color:var(--ink2);
+  white-space:nowrap;
+}
+.stat-hover:hover .stat-hover-popup{display:block;}
+.stat-hover-title{font-size:.62rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);margin-bottom:6px;}
+.stat-hover-item{padding:2px 0;border-bottom:1px solid var(--bdr);overflow:hidden;text-overflow:ellipsis;}
+.stat-hover-item:last-child{border-bottom:none;}
 .announce-popup-title{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--acc);margin-bottom:10px;}
 /* USERNAME PROMPT OVERLAY */
 .name-overlay{position:fixed;inset:0;background:rgba(26,24,20,.55);z-index:600;display:flex;align-items:center;justify-content:center;}
@@ -326,11 +349,11 @@ textarea.minp{min-height:48px;resize:vertical;}
         🔔 更新公告
         <span class="badge-new" id="announce-new-dot"></span>
       </button>
-      <div class="announce-popup" id="announce-popup">
-        <div class="announce-popup-title">更新公告</div>
+      <div class="announce-popup" id="announce-popup" style="max-height:420px;overflow-y:auto;">
+        <div class="announce-section-title">📢 系統更新</div>
         <div class="announce-item">
           <div class="announce-dot"></div>
-          <div><strong>2026/05</strong><span class="announce-new">最新</span><br>協作標記（紫色）、拖曳移動排程、使用者名稱記錄、公告欄、排程預設顯示當月起</div>
+          <div><strong>2026/05</strong><span class="announce-new">最新</span><br>協作標記（紫色）、拖曳移動排程、使用者名稱記錄、hover 排程預覽、近期異動記錄</div>
         </div>
         <div class="announce-item">
           <div class="announce-dot" style="background:var(--ink3)"></div>
@@ -340,6 +363,9 @@ textarea.minp{min-height:48px;resize:vertical;}
           <div class="announce-dot" style="background:var(--ink3)"></div>
           <div><strong>2026/03</strong><br>工具上線：Google Sheets 即時同步、多平台複選、狀態管理、密碼保護</div>
         </div>
+        <hr class="announce-divider">
+        <div class="announce-section-title">🕐 近期排程異動</div>
+        <div id="announce-changelog"></div>
       </div>
     </div>
     <div class="user-name-chip" id="user-name-chip"><span id="user-name-display">—</span></div>
@@ -490,10 +516,15 @@ function saveName(){
 function toggleAnnouncePopup(e){
   e.stopPropagation();
   const popup=document.getElementById('announce-popup');
-  popup.classList.toggle('open');
-  // hide new dot after viewing
-  document.getElementById('announce-new-dot').style.display='none';
-  localStorage.setItem('sch_announce_seen','2026-05');
+  const isOpen=popup.classList.toggle('open');
+  if(isOpen){
+    // Render changelog every time popup opens
+    const cl=document.getElementById('announce-changelog');
+    if(cl) cl.innerHTML=renderChangelog();
+    // Hide new dot
+    document.getElementById('announce-new-dot').style.display='none';
+    localStorage.setItem('sch_announce_seen','2026-05');
+  }
 }
 document.addEventListener('click',()=>{
   document.getElementById('announce-popup')?.classList.remove('open');
@@ -884,9 +915,21 @@ function renderCal(){
     const p=PL[k];if(!p)return'';
     return`<div class="stat-item"><span class="badge ${p.c}" style="font-size:.58rem">[${p.s}]</span><span class="stat-n">${n}</span></div>`;
   }).join('');
+  // Build hover lists for own/collab
+  const ownList=filtered.filter(s=>s.collab!=='1');
+  const collabList=filtered.filter(s=>s.collab==='1');
+  function statHoverHtml(items){
+    if(!items.length) return '<div style="color:var(--ink3);font-size:.68rem">無</div>';
+    return items.slice(0,10).map(s=>`<div class="stat-hover-item">${esc(s.date)} ${esc(s.topic)}</div>`).join('')
+      +(items.length>10?`<div style="color:var(--ink3);font-size:.63rem">還有 ${items.length-10} 筆…</div>`:'');
+  }
   const collabStats=filtered.length?`<div style="margin-left:auto;display:flex;gap:8px;font-size:.65rem;color:var(--ink3);align-items:center;border-left:1px solid var(--bdr);padding-left:10px;">
-    <span>自主 <b style="color:var(--ink2)">${ownCnt}</b></span>
-    <span>協作 <b style="color:#6d28d9">${collabCnt}</b></span>
+    <span class="stat-hover">自主 <b style="color:var(--ink2)">${ownCnt}</b>
+      <div class="stat-hover-popup"><div class="stat-hover-title">自主貼文</div>${statHoverHtml(ownList)}</div>
+    </span>
+    <span class="stat-hover">協作 <b style="color:#6d28d9">${collabCnt}</b>
+      <div class="stat-hover-popup"><div class="stat-hover-title">協作貼文</div>${statHoverHtml(collabList)}</div>
+    </span>
   </div>`:'';
   document.getElementById('cal-stats').innerHTML=(statsHtml||`<span style="font-size:.65rem;color:var(--ink3)">本月尚無排程</span>`)+collabStats;
 
@@ -998,6 +1041,34 @@ function toggleCollabModal(id,el){
   renderTable();
   setTimeout(()=>showDetail(id),150);
 }
+/* ── CHANGELOG ── */
+
+function renderChangelog(){
+  // Read from existing data - sort by updatedAt descending, take top 10
+  if(!data.length) return '<div style="font-size:.7rem;color:var(--ink3);padding:4px 0">尚無異動記錄</div>';
+  const sorted = [...data]
+    .filter(s=>s.updatedAt)
+    .sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt))
+    .slice(0,10);
+  if(!sorted.length) return '<div style="font-size:.7rem;color:var(--ink3);padding:4px 0">尚無異動記錄</div>';
+  return sorted.map(s=>{
+    const d = new Date(s.updatedAt);
+    const dt = (d.getMonth()+1)+'/'+(d.getDate())+' '+pad(d.getHours())+':'+pad(d.getMinutes());
+    const isNew = s.createdAt===s.updatedAt;
+    const actionLabel = isNew?'新增':'修改';
+    const actionColor = isNew?'var(--green)':'var(--acc)';
+    const user = s.updatedBy||s.createdBy||'—';
+    return `<div class="changelog-item">
+      <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
+        <span class="changelog-time">${dt}</span>
+        <span class="changelog-user">${esc(user)}</span>
+        <span style="font-size:.63rem;color:${actionColor};font-weight:600">${actionLabel}</span>
+      </div>
+      <div class="changelog-topic">${esc(s.date)} <span style="color:var(--ink3);font-size:.65rem">${esc(s.acct)}</span> ${esc(s.topic)}</div>
+    </div>`;
+  }).join('');
+}
+
 /* ── CHIP TOOLTIP ── */
 const _tt = document.getElementById('chip-tooltip');
 
