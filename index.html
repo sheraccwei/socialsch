@@ -1036,8 +1036,8 @@ function renderCal(){
     }).join('');
     const more=evs.length>3?`<div class="more-chip" onclick="showMoreDay('${ds}')">+${evs.length-3} 更多</div>`:'';
     const dayMarkers=markers.filter(m=>m.date===ds);
-    const mkHtml=dayMarkers.map(m=>`<div class="day-marker ${MK_COLORS[m.color]||'mk-red'}" onclick="event.stopPropagation();deleteMarker('${m.id}')" title="點擊刪除：${esc(m.label)}">${esc(m.label)}</div>`).join('');
-    html+=`<div class="${cls}" onclick="calDayClick(event,'${ds}')" ondragover="event.preventDefault()" ondrop="chipDrop(event,'${ds}')" ondragenter="this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" style="cursor:pointer"><div class="day-num">${d}</div>${mkHtml}${chips}${more}</div>`;
+    const mkInline=dayMarkers.map(m=>`<span class="day-marker ${MK_COLORS[m.color]||'mk-amber'}" onclick="event.stopPropagation();deleteMarker('${m.id}')" title="點擊刪除：${esc(m.label)}">${esc(m.label)}</span>`).join('');
+    html+=`<div class="${cls}" onclick="calDayClick(event,'${ds}')" ondragover="event.preventDefault()" ondrop="chipDrop(event,'${ds}')" ondragenter="this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" style="cursor:pointer"><div class="day-num">${d}${mkInline}</div>${chips}${more}</div>`;
   }
 
   const total=Math.ceil((firstDow+dim)/7)*7;
