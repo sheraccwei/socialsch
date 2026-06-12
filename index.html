@@ -293,7 +293,7 @@ textarea.minp{min-height:48px;resize:vertical;}
 /* DAY MARKERS */
 .day-marker{font-size:.6rem;font-weight:600;padding:1px 0;margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;}
 .day-marker:hover{opacity:.7;}
-.mk-red{color:#b02020;}.mk-amber{color:#8a5c00;}.mk-green{color:#1a7a45;}.mk-blue{color:#003580;}.mk-purple{color:#5b21b6;}
+.mk-red{color:#8a5c00;}.mk-amber{color:#8a5c00;}.mk-green{color:#8a5c00;}.mk-blue{color:#8a5c00;}.mk-purple{color:#8a5c00;}
 /* MARKER FORM */
 .marker-form{padding:8px 16px;border-top:1px solid var(--bdr);flex-shrink:0;background:var(--acc-bg);}
 .marker-form .mf-label{font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--acc);margin-bottom:5px;}
@@ -476,16 +476,9 @@ textarea.minp{min-height:48px;resize:vertical;}
     <div class="marker-form" id="marker-form" style="display:block;">
       <div class="mf-label">新增日期標記</div>
       <div class="marker-form-row">
-        <input type="date" id="mk-date">
-        <input type="text" id="mk-label" placeholder="標記名稱，例如：618活動開跑" maxlength="20">
-        <div class="mk-color-pick" id="mk-color-pick">
-          <div class="mk-cp sel" data-color="red" style="background:#c00020" onclick="selectMkColor(this)"></div>
-          <div class="mk-cp" data-color="amber" style="background:#b08000" onclick="selectMkColor(this)"></div>
-          <div class="mk-cp" data-color="green" style="background:#1a7a45" onclick="selectMkColor(this)"></div>
-          <div class="mk-cp" data-color="blue" style="background:#003580" onclick="selectMkColor(this)"></div>
-          <div class="mk-cp" data-color="purple" style="background:#7c3aed" onclick="selectMkColor(this)"></div>
-        </div>
-        <button class="btn-mk-add" onclick="addMarker()">新增標記</button>
+        <input type="date" id="mk-date" style="flex-shrink:0;width:120px;">
+        <input type="text" id="mk-label" placeholder="輸入節日或重要時間點" maxlength="20" onkeydown="if(event.key==='Enter')addMarker()" style="flex:1;min-width:0;">
+        <button class="btn-mk-add" onclick="addMarker()" style="flex-shrink:0;">新增</button>
       </div>
     </div>
     <div class="tbl-head" style="flex-shrink:0;">
@@ -1138,9 +1131,10 @@ async function addMarker(){
   const label=document.getElementById('mk-label').value.trim();
   if(!date||!label){ toast('請填寫日期和標記名稱','err'); return; }
   const id=gid(), now=nowISO();
-  const m={id,date,label,color:mkColor,createdBy:currentUser(),createdAt:now};
+  const mkFixedColor='amber';
+  const m={id,date,label,color:mkFixedColor,createdBy:currentUser(),createdAt:now};
   try{
-    await gasCall({action:'appendMarker',row:[id,date,label,mkColor,currentUser(),now]});
+    await gasCall({action:'appendMarker',row:[id,date,label,mkFixedColor,currentUser(),now]});
     markers.push(m);
     document.getElementById('mk-label').value='';
     renderCal();
